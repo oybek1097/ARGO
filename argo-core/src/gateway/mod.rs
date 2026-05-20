@@ -18,6 +18,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/health", get(routes::health))
         .route("/api/version", get(routes::version))
         .route("/api/chat", post(routes::chat))
+        // SSE streaming chat endpoint.
+        .route("/api/chat/stream", post(routes::chat_stream))
         .route("/api/history/:uid", get(routes::history))
         // WebSocket chat endpoint.
         .route("/ws/:uid", get(routes::ws))
@@ -25,6 +27,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/chat/completions", post(routes::chat_completions))
         // OpenAI-compatible model listing endpoint.
         .route("/v1/models", get(routes::models))
+        // OpenAI-compatible embeddings endpoint.
+        .route("/v1/embeddings", post(routes::embeddings))
         .route("/metrics", get(routes::metrics))
         .with_state(state)
 }

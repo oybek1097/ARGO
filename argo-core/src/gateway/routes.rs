@@ -1,13 +1,17 @@
 //! Request handlers for the gateway routes.
 
+use std::convert::Infallible;
+use std::net::SocketAddr;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{Path, State};
+use axum::extract::{ConnectInfo, Path, State};
 use axum::http::StatusCode;
+use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::Response;
 use axum::Json;
+use futures::stream::{self, Stream};
 use serde_json::{json, Value};
 use uuid::Uuid;
 
@@ -32,10 +36,23 @@ pub async fn version(State(state): State<Arc<AppState>>) -> Json<Value> {
 }
 
 /// `POST /api/chat` — forwards a chat request to argo-brain over IPC.
+///
+/// Guarded by the per-IP rate limiter: clients exceeding the configured
+/// budget receive HTTP 429 before any work is dispatched to the brain.
 pub async fn chat(
     State(state): State<Arc<AppState>>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let client_ip = peer.ip().to_string();
+    if !state.rate_limiter.check(&client_ip) {
+        tracing::warn!("rate limit exceeded for {client_ip}");
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(json!({ "error": "rate limit exceeded" })),
+        ));
+    }
+
     state.chat_requests.fetch_add(1, Ordering::Relaxed);
 
     let user_id = body
@@ -76,6 +93,80 @@ pub async fn chat(
             ))
         }
     }
+}
+
+/// `POST /api/chat/stream` — Server-Sent Events streaming chat endpoint.
+///
+/// Forwards the chat request to argo-brain over IPC, then streams the result
+/// back to the client as SSE `data:` frames followed by a terminal
+/// `data: [DONE]` frame.
+///
+/// Note: argo-brain currently returns a single complete response per call, so
+/// this skeleton emits the whole reply as one `data:` frame. The framing is
+/// already token-stream-shaped, so a future incremental brain protocol can
+/// drop in without changing the wire contract.
+pub async fn chat_stream(
+    State(state): State<Arc<AppState>>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    Json(body): Json<Value>,
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    let client_ip = peer.ip().to_string();
+
+    // The rate limiter guards the streaming endpoint too; an over-limit
+    // client gets an error frame rather than an HTTP status (the SSE
+    // response has already begun by the time the body streams).
+    if !state.rate_limiter.check(&client_ip) {
+        tracing::warn!("rate limit exceeded for {client_ip} (stream)");
+        let events = vec![
+            Ok(Event::default().data(json!({ "error": "rate limit exceeded" }).to_string())),
+            Ok(Event::default().data("[DONE]")),
+        ];
+        return Sse::new(stream::iter(events)).keep_alive(KeepAlive::default());
+    }
+
+    state.chat_requests.fetch_add(1, Ordering::Relaxed);
+
+    let user_id = body
+        .get("user_id")
+        .and_then(Value::as_str)
+        .unwrap_or("anon")
+        .to_string();
+    let message = body
+        .get("message")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+
+    state.memory.push(&user_id, "user", &message);
+
+    let request = json!({
+        "action": "chat",
+        "id": Uuid::new_v4().to_string(),
+        "user_id": user_id,
+        "message": message,
+        "channel": "http-sse",
+    });
+
+    let mut events: Vec<Result<Event, Infallible>> = Vec::new();
+    match ipc::call(&state.config.brain_socket, &request).await {
+        Ok(response) => {
+            if let Some(content) = response.get("content").and_then(Value::as_str) {
+                state.memory.push(&user_id, "assistant", content);
+            }
+            events.push(Ok(Event::default().data(response.to_string())));
+        }
+        Err(err) => {
+            state.chat_errors.fetch_add(1, Ordering::Relaxed);
+            tracing::warn!("sse chat dispatch failed: {err}");
+            events.push(Ok(
+                Event::default().data(json!({ "error": err }).to_string())
+            ));
+        }
+    }
+    // Terminal frame: signals the client the stream is complete.
+    events.push(Ok(Event::default().data("[DONE]")));
+
+    Sse::new(stream::iter(events)).keep_alive(KeepAlive::default())
 }
 
 /// `GET /api/history/:uid` — returns the L0-cached message history.
@@ -239,6 +330,77 @@ pub async fn models() -> Json<Value> {
             { "id": "argo", "object": "model", "owned_by": "argo" },
             { "id": "argo-brain", "object": "model", "owned_by": "argo" },
         ],
+    }))
+}
+
+/// Length of the stub embedding vector.
+const STUB_EMBEDDING_DIM: usize = 16;
+
+/// Produces a deterministic pseudo-embedding for `input`.
+///
+/// STUB IMPLEMENTATION — argo-core ships no embedding model. This derives a
+/// fixed-length float vector purely by hashing the input string, so the same
+/// input always yields the same vector. The values carry no semantic meaning
+/// and must NOT be used for real similarity search; they exist only so the
+/// `/v1/embeddings` endpoint has a stable, OpenAI-shaped contract until a real
+/// embedding model is wired into argo-brain.
+fn stub_embedding(input: &str) -> Vec<f32> {
+    // FNV-1a 64-bit hash, seeded per dimension index for variation.
+    (0..STUB_EMBEDDING_DIM)
+        .map(|i| {
+            let mut hash: u64 = 0xcbf29ce484222325 ^ (i as u64).wrapping_mul(0x100000001b3);
+            for byte in input.bytes() {
+                hash ^= byte as u64;
+                hash = hash.wrapping_mul(0x100000001b3);
+            }
+            // Map the hash into a deterministic float in [-1.0, 1.0).
+            let unit = (hash as f64) / (u64::MAX as f64);
+            (unit * 2.0 - 1.0) as f32
+        })
+        .collect()
+}
+
+/// `POST /v1/embeddings` — OpenAI-compatible embeddings endpoint.
+///
+/// Accepts `{"model": ..., "input": ...}` where `input` is a string (or a
+/// JSON array of strings). Returns an OpenAI-shaped `list` of embedding
+/// objects.
+///
+/// STUB: the embeddings are deterministic hashes of the input, not real
+/// semantic vectors — see [`stub_embedding`].
+pub async fn embeddings(Json(body): Json<Value>) -> Json<Value> {
+    let model = body
+        .get("model")
+        .and_then(Value::as_str)
+        .unwrap_or("argo-embed-stub")
+        .to_string();
+
+    // `input` may be a single string or an array of strings.
+    let inputs: Vec<String> = match body.get("input") {
+        Some(Value::String(s)) => vec![s.clone()],
+        Some(Value::Array(arr)) => arr
+            .iter()
+            .map(|v| v.as_str().unwrap_or("").to_string())
+            .collect(),
+        _ => vec![String::new()],
+    };
+
+    let data: Vec<Value> = inputs
+        .iter()
+        .enumerate()
+        .map(|(index, text)| {
+            json!({
+                "object": "embedding",
+                "index": index,
+                "embedding": stub_embedding(text),
+            })
+        })
+        .collect();
+
+    Json(json!({
+        "object": "list",
+        "data": data,
+        "model": model,
     }))
 }
 

@@ -77,6 +77,10 @@ class HTTPGateway:
                     user_id = qs.get("user_id", ["anon"])[0]
                     history = asyncio.run(agent.memory.history(user_id))
                     self._send(200, {"history": history})
+                elif parsed.path == "/openapi.json":
+                    from argo_brain.api.openapi import build_openapi_spec
+
+                    self._send(200, build_openapi_spec())
                 elif parsed.path in ("/", "/dashboard"):
                     from argo_brain.api.dashboard import dashboard_page
 

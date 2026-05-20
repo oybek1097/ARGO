@@ -12,8 +12,10 @@ mod config;
 mod gateway;
 mod ipc;
 mod memory;
+mod security;
 mod state;
 
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use tracing_subscriber::EnvFilter;
@@ -42,10 +44,15 @@ async fn main() {
         config.brain_socket,
     );
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .expect("server error");
+    // `into_make_service_with_connect_info` exposes the peer `SocketAddr`
+    // so handlers can extract the client IP (used by the rate limiter).
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .expect("server error");
 
     tracing::info!("argo-core stopped");
 }

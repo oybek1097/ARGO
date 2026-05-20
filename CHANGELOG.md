@@ -11,9 +11,12 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Agent core: the Plan → Execute loop (spec section 4.2)
 - Memory: L0 working memory (deque) + L1 persistent (SQLite + FTS5) +
   L2 vector store (cosine-similarity search) + L3 knowledge graph
-- Tool system: the `Tool` ABC, a registry, and 49 built-in tools across the
-  basic, web, terminal, file, text, system, workflow, memory, devops and
-  data toolsets
+- Tool system: the `Tool` ABC, a registry, and 55 built-in tools across the
+  basic, web, terminal, file, text, format, system, workflow, memory,
+  devops and data toolsets
+- Terminal backends: local, Docker and SSH command execution (spec 4.15)
+- Context files: a loader for MEMORY.md/USER.md/AGENTS.md/.argo.md and
+  `@`-reference expansion
 - Checkpoint & handoff: file-snapshot checkpoints with restore, and
   SQLite-backed handoff tickets (create/claim/pending)
 - DevOps tools: Git, Docker, kubectl, Vault, SSH, Ansible and Terraform —
@@ -37,8 +40,9 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Language detection: a uz/ru/kk/ky/tg/en heuristic
 - Channels: the `Channel` ABC plus Telegram, Email (IMAP/SMTP), IRC (TCP),
   Matrix, Mattermost, Rocket.Chat, LINE, Viber, WhatsApp, Twilio SMS,
-  Google Chat, Microsoft Teams, a generic webhook adapter and Slack
-  (Events API); a `/webhook/<platform>` route
+  Google Chat, Microsoft Teams, Discord (with a stdlib WebSocket client),
+  a generic webhook adapter and Slack (Events API); a `/webhook/<platform>`
+  route
 - Skills: an agentskills.io-compatible markdown loader and a curator
   (grading, duplicate detection, archive recommendations)
 - Hub & Marketplace: an `.argopkg` package format, HMAC-signed publishing,
@@ -52,13 +56,16 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
   `selftest`
-- 651 unit tests (stdlib `unittest`)
+- 750 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
-  `/api/history/:uid`, `/metrics`, a `/ws/:uid` WebSocket endpoint and
-  OpenAI-compatible `/v1/chat/completions` and `/v1/models` endpoints
-- 8 Rust unit tests (memory ring buffer, config loading)
+  `/api/chat/stream` (SSE), `/api/history/:uid`, `/metrics`, a `/ws/:uid`
+  WebSocket endpoint and OpenAI-compatible `/v1/chat/completions`,
+  `/v1/models` and `/v1/embeddings` endpoints
+- A per-IP rate limiter guarding the chat endpoints
+- An OpenAPI 3.1 spec generator (served at `/openapi.json`)
+- 12 Rust unit tests (memory ring buffer, config loading, rate limiter)
 - L0 working memory (DashMap, a per-user ring buffer)
 - A Unix-socket IPC client to argo-brain
 - Prometheus metrics

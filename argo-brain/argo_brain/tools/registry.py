@@ -68,6 +68,7 @@ def build_default_registry(memory=None) -> ToolRegistry:
         basic, data, devops, devops_extra, files, system, terminal, text,
         web, workflow,
     )
+    from argo_brain.tools.builtin import format as format_tools_mod
 
     registry = ToolRegistry()
     for tool in basic.builtin_tools(memory=memory):
@@ -83,6 +84,8 @@ def build_default_registry(memory=None) -> ToolRegistry:
     for tool in system.system_tools():
         registry.register(tool)
     for tool in workflow.workflow_tools():
+        registry.register(tool)
+    for tool in format_tools_mod.format_tools():
         registry.register(tool)
     for tool in devops.devops_tools():
         registry.register(tool)

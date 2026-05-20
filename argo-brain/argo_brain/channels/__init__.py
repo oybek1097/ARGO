@@ -13,6 +13,7 @@ from argo_brain.channels.base import (
     ChannelHealth,
     ChannelMessage,
 )
+from argo_brain.channels.discord import DiscordChannel
 from argo_brain.channels.email_channel import EmailChannel
 from argo_brain.channels.google_chat import GoogleChatChannel
 from argo_brain.channels.irc import IRCChannel
@@ -38,6 +39,7 @@ __all__ = [
     "ChannelDirection",
     "ChannelHealth",
     "ChannelMessage",
+    "DiscordChannel",
     "EmailChannel",
     "GenericWebhookChannel",
     "GoogleChatChannel",

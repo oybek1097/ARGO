@@ -1,0 +1,181 @@
+# Continuous integration for the ARGO Agent v3.0 monorepo.
+#
+# Runs on every push and pull request. The repository hosts two components:
+#   * argo-brain — Python 3.12, standard-library only (no pip dependencies).
+#   * argo-core  — Rust gateway (Cargo workspace).
+#
+# This workflow covers the `lint`, `test-unit` and `build` stages from the
+# Technical Specification section 11. Integration, E2E, security and
+# performance stages live in separate workflows (see `security-scan.yml`)
+# or are tracked as alpha-stage work in progress.
+#
+# Note: `argo-brain` is intentionally stdlib-only, so there is no dependency
+# installation step for the brain test job — that is the real project state.
+
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# CI is read-only; it neither publishes artifacts nor mutates the repository.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref to save runner minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff + cargo fmt + clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        # ruff is the only lint tool installed; the brain itself has no
+        # runtime dependencies. ruff configuration lives in
+        # argo-brain/pyproject.toml ([tool.ruff]).
+        run: python -m pip install --upgrade "ruff>=0.6"
+
+      - name: Run ruff on argo-brain
+        working-directory: argo-brain
+        run: ruff check .
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            argo-core/target
+          key: cargo-lint-${{ runner.os }}-${{ hashFiles('argo-core/Cargo.lock') }}
+          restore-keys: |
+            cargo-lint-${{ runner.os }}-
+
+      - name: Run cargo fmt --check on argo-core
+        working-directory: argo-core
+        run: cargo fmt --all -- --check
+
+      - name: Run cargo clippy on argo-core
+        working-directory: argo-core
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  test-brain:
+    name: Test argo-brain (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # argo-brain is standard-library only — there is deliberately no
+      # `pip install` step here. Tests run with the stdlib unittest runner.
+      - name: Run the unittest suite
+        working-directory: argo-brain
+        run: python3 -m unittest discover -s tests -v
+
+  test-core:
+    name: Test argo-core (cargo test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            argo-core/target
+          key: cargo-test-${{ runner.os }}-${{ hashFiles('argo-core/Cargo.lock') }}
+          restore-keys: |
+            cargo-test-${{ runner.os }}-
+
+      - name: Run cargo test
+        working-directory: argo-core
+        run: cargo test --workspace --all-features
+
+  build:
+    name: Build (core release binary + brain distributions)
+    runs-on: ubuntu-latest
+    # Only build once linting and tests pass.
+    needs: [lint, test-brain, test-core]
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            argo-core/target
+          key: cargo-build-${{ runner.os }}-${{ hashFiles('argo-core/Cargo.lock') }}
+          restore-keys: |
+            cargo-build-${{ runner.os }}-
+
+      - name: Build argo-core release binary
+        working-directory: argo-core
+        run: cargo build --release --locked
+
+      - name: Upload argo-core binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: argo-core-binary
+          path: argo-core/target/release/argo-core
+          if-no-files-found: error
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade build twine
+
+      - name: Build argo-brain sdist + wheel
+        working-directory: argo-brain
+        run: python -m build --sdist --wheel --outdir dist
+
+      - name: Validate argo-brain distributions
+        working-directory: argo-brain
+        run: python -m twine check dist/*
+
+      - name: Upload argo-brain distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: argo-brain-dist
+          path: argo-brain/dist/
+          if-no-files-found: error
