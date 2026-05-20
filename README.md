@@ -1,120 +1,82 @@
-# ARGO Agent v3.0 — Texnik Zadacha to'plami
+# ARGO Agent v3.0
 
-**Sana:** May 2026 · **Versiya:** 1.0 · **Litsenziya:** MIT
+> Ochiq manbali, ko'p tilli AI agent platformasi — **Rust gateway + Python brain**.
+> Markaziy Osiyo tillari va DevOps uchun maxsus optimallashtirilgan.
 
-Bu to'plamda ARGO Agent v3.0 ni 0 dan yaratish uchun barcha texnik hujjatlar mavjud. Hujjatlar Hermes Agent v0.14.0 "Foundation Release" tahliliga asoslangan va GitHub'da rasmiy loyiha hujjati sifatida nashr etish uchun tayyor.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Status](https://img.shields.io/badge/status-alpha-orange)
+![Tests](https://img.shields.io/badge/tests-73%20passing-brightgreen)
 
-## Hujjatlar tarkibi
-
-| Fayl | Maqsad | Hajm | Auditoriya |
-|---|---|---|---|
-| **ARGO_TZ_Executive_Summary.md** | 1-sahifalik qisqacha xulosa | 1 sahifa | Yuqori menejment, investorlar |
-| **ARGO_AGENT_v3_Texnik_Zadacha.md** | To'liq texnik spetsifikatsiya (asosiy hujjat) | ~100 sahifa, 10K so'z | Muhandislik jamoasi |
-| **ARGO_TZ_Hermes_Parity_Matrix.md** | Hermes ↔ ARGO funksiya-funksiya jadvali | ~70 sahifa, 9K so'z, 470+ qator | Texnik lead, planner |
-| **README.md** | Bu fayl — navigatsiya | — | — |
-
-## Qaysi tartibda o'qish kerak
-
-1. **Birinchi marta tanishish:** `ARGO_TZ_Executive_Summary.md` (5 daqiqa)
-2. **Loyihani boshlashdan oldin:** `ARGO_AGENT_v3_Texnik_Zadacha.md` — 0-bo'lim (Annotation) + 13-bo'lim (Sprint Roadmap)
-3. **Komponent ishlab chiqishdan oldin:** `ARGO_AGENT_v3_Texnik_Zadacha.md` — tegishli 4.X bo'limi
-4. **Hermes bilan taqqoslash kerak:** `ARGO_TZ_Hermes_Parity_Matrix.md`
-5. **Risk va ochiq savollar:** Asosiy hujjat 14-15 bo'limlari
-
-## Asosiy ko'rsatkichlar (qisqa)
-
-ARGO v3.0 maqsadlari Hermes v0.14.0 ga nisbatan:
-
-| Performance | Improvement |
-|---|---|
-| Idle RAM | **20x kamroq** (400 MB → <20 MB) |
-| Cold start | **10x tezroq** (1.5s → <150ms) |
-| Tool dispatch | **10x tezroq** (10ms → <1ms) |
-| WS connections | **10x ko'proq** (5k → 50k+) |
-| Memory throughput | **20x ko'proq** (500/s → 10k/s) |
-
-| Funksiyalar | Hermes | ARGO | ARGO exclusive |
-|---|---|---|---|
-| Built-in tools | 70 | 120+ | DevOps 25 ta |
-| Messaging platforms | 22 | 30+ | CIS 8 ta |
-| LLM providers | 26 | 32+ | RU/CN 6 ta |
-| Tillar (native agent) | 7 | 7+ | Markaziy Osiyo 5 ta |
-| Terminal backends | 7 | 12 | K8s/Lima/Firecracker |
-| **JAMI funksiyalar** | **~358** | **~474** | **~110 yangi** |
-
-## Loyiha tuzilishi (kelajakdagi repo)
-
-```
-argo-agent/
-├── argo-core/              # Rust gateway (~15K satr)
-│   ├── src/
-│   ├── Cargo.toml
-│   └── README.md
-├── argo-brain/             # Python brain (~50K satr)
-│   ├── argo_brain/
-│   ├── pyproject.toml
-│   └── README.md
-├── argo-cli/               # Rust CLI binary (~5K satr)
-├── argo-tui/               # React/Ink TUI (~10K satr)
-├── argo-web/               # Next.js dashboard (~15K satr)
-├── argo-mcp-tools/         # Bundled MCP servers
-├── argo-skills/            # 150+ bundled markdown skills
-├── argo-docs/              # Docusaurus site
-├── helm/                   # Kubernetes Helm chart
-├── docker-compose.yml      # Single-node deployment
-├── monitoring/             # Prometheus + Grafana
-├── scripts/                # Install, migrate, doctor
-├── tests/                  # Integration + E2E
-├── CHANGELOG.md
-├── CONTRIBUTING.md
-├── LICENSE                 # MIT
-└── README.md
-```
-
-## Sprint roadmap (qisqacha)
-
-| Sprint | Hafta | Asosiy yetkazib berish |
-|---|---|---|
-| 0 | 1-2 | v2.0 bug fixlar, CI |
-| 1 | 3-4 | Rust gateway |
-| 2 | 5-6 | Python brain v1 |
-| 3 | 7-8 | Skills + Curator |
-| 4 | 9-10 | Tools I (40 ta) |
-| 5 | 11-12 | Tools II DevOps (35 ta) |
-| 6 | 13-14 | Channels I (6 ta core) |
-| 7 | 15-16 | Channels II (24 ta extra) |
-| 8 | 17-18 | Multi-agent + MCP |
-| 9 | 19-20 | TUI + Web |
-| 10 | 21-22 | Polish + security audit |
-| 11 | 23-24 | Hub + marketplace |
-| 12 | 25-26 | GA Launch |
-
-## Litsenziya
-
-Bu texnik zadacha **MIT litsenziyasi** ostida tarqatiladi. ARGO Agent loyihasining barcha kod va hujjatlari MIT ostida bo'ladi.
-
-## Hissa qo'shish
-
-PR'lar GitHub'da kutiladi. Ko'rib chiqish jarayoni:
-1. Issue ochish va muhokama qilish
-2. PR yuborish (2 reviewer approval kerak)
-3. CI yashil bo'lishi shart
-4. Signed-off-by trailer kerak
-
-## Hermes Agent va ARGO
-
-ARGO **Hermes Agent**ning **alternative emas, balki to'ldiruvchisi**. ARGO:
-- ✅ Hermes skill'larini import qiladi (agentskills.io standart)
-- ✅ Hermes MCP serverlariga ulanadi
-- ✅ OpenAI proxy bir xil (kross-platforma)
-- ✅ NousResearch va Hermes jamoasiga to'liq krediga ega
-
-Bizning farqimiz — bu yerda nima yangi:
-- 🆕 Rust core (performance + xavfsizlik)
-- 🆕 Markaziy Osiyo tillari
-- 🆕 DevOps stack
-- 🆕 Sovereign compliance
+ARGO — Hermes Agent ekotizimiga feature-parity'ni maqsad qilgan, undan tashqari
+Markaziy Osiyo va sovereign deployment niche'lariga exclusive funksiyalar beruvchi
+agent platformasi. To'liq texnik spetsifikatsiya: [`ARGO_AGENT_v3_Texnik_Zadacha.md`](ARGO_AGENT_v3_Texnik_Zadacha.md).
 
 ---
 
-*Hujjatlar ARGO Loyihasi tomonidan yaratildi · May 2026*
+## Tez boshlash
+
+```bash
+# Bir buyruqli o'rnatish (toolchain tekshiradi, argo-core quradi, sozlaydi)
+./scripts/setup.sh
+
+# yoki qo'lda:
+cd argo-brain
+python3 -m argo_brain setup      # interaktiv sozlash sehrgari
+python3 -m argo_brain doctor     # diagnostika
+python3 -m argo_brain chat       # interaktiv suhbat (API kalitsiz)
+python3 -m argo_brain serve      # HTTP gateway
+python3 -m argo_brain telegram   # Telegram bot
+```
+
+`argo-brain` yadrosi **faqat Python stdlib** bilan ishlaydi — o'rnatishsiz darhol
+sinab ko'rsa bo'ladi.
+
+## Repozitoriya tuzilishi
+
+```
+ARGO/
+├── argo-core/          # Rust gateway (Axum + Tokio) — HTTP, IPC, L0 memory, metrics
+├── argo-brain/         # Python brain — agent loop, tools, memory, channels, plugins
+├── scripts/setup.sh    # bir buyruqli o'rnatuvchi
+├── ARGO_AGENT_v3_Texnik_Zadacha.md   # to'liq texnik zadacha (TZ)
+├── ARGO_TZ_Executive_Summary.md      # 1-sahifalik xulosa
+├── ARGO_TZ_Hermes_Parity_Matrix.md   # Hermes ↔ ARGO funksiya jadvali
+└── LICENSE             # MIT
+```
+
+## Hozirgi holat (alpha)
+
+ARGO TZ bo'yicha **12 sprintlik** loyiha. Quyidagilar bajarilgan:
+
+| Komponent | Holat |
+|---|---|
+| `argo-core` — Rust gateway (`/api/health`, `/api/chat`, `/api/history`, `/metrics`) | ✅ ishlaydi (1.3 MB binary) |
+| `argo-brain` — agent loop (Plan→Execute), 13 built-in tool | ✅ ishlaydi |
+| Xotira — L0 (deque) + L1 (SQLite + FTS5) | ✅ |
+| LLM provayderlar — Mock + Anthropic | ✅ |
+| Skills, Plugin (5-hook), Kanban multi-agent, Cron | ✅ |
+| Til aniqlash — uz/ru/kk/ky/tg/en | ✅ |
+| Telegram kanali | ✅ |
+| IPC (argo-core ↔ argo-brain) | ✅ |
+| Setup sehrgari + doctor | ✅ |
+| Qolgan 29+ kanal, TUI, web dashboard, MCP, 100+ tool | 🔜 keyingi sprintlar |
+
+Yo'l xaritasi: TZ 13-bo'lim. O'zgarishlar tarixi: [`CHANGELOG.md`](CHANGELOG.md).
+
+## Arxitektura
+
+```
+Foydalanuvchi ─► Kanal adapter ─► argo-core (Rust) ──IPC──► argo-brain (Python)
+                                  HTTP/WS gateway          agent loop + tools
+```
+
+`argo-core` — kichik, xavfsiz tashqi yuz; `argo-brain` — boy AI mantiq.
+Ikkisi Unix socketda satr-cheklangan JSON orqali bog'lanadi (TZ 3.4).
+
+## Hissa qo'shish
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) ga qarang.
+
+## Litsenziya
+
+MIT — [`LICENSE`](LICENSE).

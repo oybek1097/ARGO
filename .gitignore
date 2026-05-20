@@ -1,0 +1,27 @@
+# Claude Code local settings
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Rust
+/argo-core/target/
+**/*.rs.bk
+
+# Runtime data
+data/
+*.db
+*.db-wal
+*.db-shm
+*.sock
+.env
+
+# OS
+.DS_Store

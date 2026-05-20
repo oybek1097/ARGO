@@ -1,0 +1,38 @@
+[project]
+name = "argo-brain"
+version = "0.1.0"
+description = "ARGO Agent v3.0 — Python brain (agent loop, tools, memory, channels)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "ARGO Agent Loyihasi" }]
+
+# Skeleton bosqichi: yadro faqat stdlib bilan ishlaydi (tashqi kutubxonasiz).
+# Quyidagi bog'liqliklar sprintlar davomida bosqichma-bosqich qo'shiladi.
+dependencies = []
+
+[project.optional-dependencies]
+# Sprint 2+ — to'liq brain uchun rejalashtirilgan bog'liqliklar
+full = [
+    "pydantic-settings>=2.0",
+    "anthropic>=0.40",
+    "aiosqlite>=0.20",
+    "httpx>=0.27",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[project.scripts]
+argo-brain = "argo_brain.__main__:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

@@ -1,0 +1,29 @@
+[package]
+name = "argo-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "ARGO Agent v3.0 — Rust gateway (argo-core)"
+authors = ["ARGO Agent Loyihasi"]
+
+[[bin]]
+name = "argo-core"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "io-util", "time"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dashmap = "6"
+uuid = { version = "1", features = ["v4"] }
+
+# Release profile tuned for the TZ target: a small (<5 MB), stripped binary.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
