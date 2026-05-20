@@ -1,0 +1,36 @@
+# MANIFEST.in — source-distribution contents for the `argo-brain` package.
+#
+# Used at PyPI release time. Copy (or symlink) this file next to the
+# release pyproject.toml inside `argo-brain/` so `python -m build` picks it up.
+#
+# Goal: ship the docs and any bundled non-Python data the brain needs at
+# runtime; never ship tests, caches or compiled artifacts.
+
+# --- Documentation and license -------------------------------------------
+include README.md
+include LICENSE
+include CHANGELOG.md
+include ../README.md
+include ../LICENSE
+include ../CHANGELOG.md
+
+# --- Bundled package data (skills, prompts, markdown templates) ----------
+# argo-brain runs on the stdlib only; any markdown / text / json that the
+# package loads at runtime must be declared here so it lands in the sdist.
+recursive-include argo_brain *.md
+recursive-include argo_brain *.txt
+recursive-include argo_brain *.json
+recursive-include argo_brain/skills *.md
+recursive-include argo_brain/skills *.yaml
+recursive-include argo_brain/skills *.yml
+
+# --- Exclusions -----------------------------------------------------------
+exclude .gitignore
+exclude Dockerfile
+prune tests
+prune .github
+recursive-exclude * __pycache__
+recursive-exclude * *.py[cod]
+recursive-exclude * *.so
+recursive-exclude * *~
+recursive-exclude * .DS_Store

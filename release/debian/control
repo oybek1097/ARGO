@@ -1,0 +1,31 @@
+Source: argo-agent
+Section: utils
+Priority: optional
+Maintainer: ARGO Agent Project <maintainers@argo-agent.dev>
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc,
+               python3 (>= 3.12)
+Standards-Version: 4.6.2
+Homepage: https://github.com/argo-agent/argo
+Vcs-Git: https://github.com/argo-agent/argo.git
+Vcs-Browser: https://github.com/argo-agent/argo
+Rules-Requires-Root: no
+
+Package: argo-agent
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         python3 (>= 3.12)
+Recommends: ca-certificates
+Description: Open-source multilingual AI agent platform
+ ARGO is an open-source AI agent platform built from two components:
+ argo-core, a small Rust HTTP gateway (Axum + Tokio), and argo-brain,
+ a Python brain that runs the agent loop, tools and memory. The two
+ communicate over a Unix domain socket using line-delimited JSON.
+ .
+ ARGO is specially optimised for Central Asian languages and DevOps
+ workflows, and is designed for sovereign, self-hosted deployment.
+ .
+ This package installs both components and a systemd service for the
+ argo-core gateway, which listens on HTTP port 8000.

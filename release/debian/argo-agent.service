@@ -1,0 +1,31 @@
+[Unit]
+Description=ARGO Agent — Rust gateway (argo-core)
+Documentation=https://github.com/argo-agent/argo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# argo-core reads ARGO_HOME for its data and IPC socket location.
+Environment=ARGO_HOME=/var/lib/argo-agent
+Environment=ARGO_CORE_HOST=127.0.0.1
+Environment=ARGO_CORE_PORT=8000
+ExecStart=/usr/bin/argo-core
+Restart=on-failure
+RestartSec=2
+
+# Run unprivileged; the system user is created by the postinst script.
+User=argo
+Group=argo
+StateDirectory=argo-agent
+RuntimeDirectory=argo-agent
+
+# Hardening.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/argo-agent
+
+[Install]
+WantedBy=multi-user.target

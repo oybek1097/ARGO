@@ -1,0 +1,79 @@
+#cloud-config
+# -----------------------------------------------------------------------
+# ARGO Agent v3.0 — shared cloud-init configuration.
+#
+# This is the provider-agnostic reference used by every template in
+# deploy/cloud/. It is valid cloud-init and can be passed directly as
+# user-data on any cloud that supports cloud-init (Ubuntu 22.04 LTS).
+#
+# What it does on first boot:
+#   1. Installs Docker Engine and the Docker Compose plugin.
+#   2. Clones the ARGO repository into /opt/argo/ARGO.
+#   3. Runs `docker compose up -d --build` to start argo-core + argo-brain.
+#
+# After it finishes, the HTTP API is reachable on TCP port 8000:
+#   curl http://<vm-public-ip>:8000/api/health
+#
+# First boot takes ~5-10 minutes (Docker install + Rust release build).
+# Progress is logged to /var/log/cloud-init-output.log.
+# -----------------------------------------------------------------------
+
+package_update: true
+package_upgrade: false
+
+# Base packages needed before the Docker repository is added.
+packages:
+  - ca-certificates
+  - curl
+  - git
+
+# Files written before runcmd executes.
+write_files:
+  # A small helper that brings ARGO up; runcmd invokes it.
+  - path: /opt/argo/install.sh
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env bash
+      # Install Docker and start ARGO Agent. Idempotent: safe to re-run.
+      set -euo pipefail
+
+      ARGO_REPO="${ARGO_REPO:-https://github.com/argo-agent/argo.git}"
+      ARGO_REF="${ARGO_REF:-main}"
+      ARGO_DIR="/opt/argo/ARGO"
+
+      echo "[argo] Installing Docker Engine..."
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+        -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+        https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+        > /etc/apt/sources.list.d/docker.list
+      apt-get update -y
+      apt-get install -y \
+        docker-ce docker-ce-cli containerd.io \
+        docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+
+      echo "[argo] Fetching the ARGO repository (${ARGO_REF})..."
+      if [ -d "${ARGO_DIR}/.git" ]; then
+        git -C "${ARGO_DIR}" fetch --depth 1 origin "${ARGO_REF}"
+        git -C "${ARGO_DIR}" checkout -f "${ARGO_REF}"
+      else
+        mkdir -p /opt/argo
+        git clone --depth 1 --branch "${ARGO_REF}" "${ARGO_REPO}" "${ARGO_DIR}"
+      fi
+
+      echo "[argo] Building and starting the ARGO services..."
+      cd "${ARGO_DIR}"
+      docker compose up -d --build
+
+      echo "[argo] Done. API will be available on TCP port 8000."
+
+runcmd:
+  - [ bash, /opt/argo/install.sh ]
+
+# A clear marker once cloud-init has finished successfully.
+final_message: "ARGO Agent cloud-init finished after $UPTIME seconds. Verify with: curl http://<public-ip>:8000/api/health"

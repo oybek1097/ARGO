@@ -36,6 +36,8 @@ the project adheres to [Semantic Versioning](https://semver.org/).
   route
 - Skills: an agentskills.io-compatible markdown loader and a curator
   (grading, duplicate detection, archive recommendations)
+- Hub & Marketplace: an `.argopkg` package format, HMAC-signed publishing,
+  a file-backed registry and a verifying install client
 - Interfaces: a rich terminal UI (`tui`) and a web dashboard served at `/`
 - MCP client + server: connects to external MCP servers over stdio
   (newline-delimited JSON-RPC 2.0) exposing their tools as
@@ -45,7 +47,7 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
   `selftest`
-- 493 unit tests (stdlib `unittest`)
+- 539 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
@@ -62,6 +64,8 @@ the project adheres to [Semantic Versioning](https://semver.org/).
   a Helm chart, and DEPLOYMENT.md
 - Documentation: a `docs/` site (introduction, installation, quickstart,
   architecture, configuration, tools, channels, CLI, contributing)
+- Release packaging: PyPI metadata, a Debian package, a Homebrew formula,
+  and a cloud-init deployment template
 - README, CHANGELOG, CONTRIBUTING, .gitignore
 
 [Unreleased]: https://github.com/oybek1097/ARGO

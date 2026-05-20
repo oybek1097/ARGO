@@ -1,0 +1,32 @@
+#!/bin/sh
+# postinst maintainer script for argo-agent.
+# Creates the system user, then enables and starts the systemd service.
+set -e
+
+case "$1" in
+    configure)
+        # Create an unprivileged system user for the argo-core gateway.
+        if ! getent passwd argo >/dev/null 2>&1; then
+            adduser --system --group --no-create-home \
+                    --home /var/lib/argo-agent \
+                    --gecos "ARGO Agent" argo
+        fi
+
+        # Ensure the data directory exists and is owned by the service user.
+        mkdir -p /var/lib/argo-agent
+        chown argo:argo /var/lib/argo-agent
+
+        # Enable and (re)start the service if systemd is available.
+        if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload || true
+            systemctl enable argo-agent.service || true
+            systemctl restart argo-agent.service || true
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

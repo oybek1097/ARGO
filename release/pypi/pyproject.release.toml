@@ -1,0 +1,109 @@
+# =============================================================================
+# pyproject.release.toml — GA-RELEASE REFERENCE for the `argo-brain` package
+# =============================================================================
+#
+# This file is the canonical, complete `pyproject.toml` for the ARGO Agent
+# v3.0.0 GA release on PyPI. It is NOT used directly by the build.
+#
+# At release time, reconcile the in-repo `argo-brain/pyproject.toml` against
+# this reference: copy the resolved metadata in, bump the version, and verify
+# `python -m build` + `twine check` pass. See `release/pypi/RELEASING.md`.
+#
+# The in-repo pyproject still carries the development version (0.1.0); this
+# reference pins the GA target (3.0.0). Keeping them as two files avoids
+# accidentally publishing a development version.
+#
+# Honest status note: ARGO is alpha approaching its v3.0.0 GA. The brain core
+# runs on the Python 3.12 standard library only — zero required dependencies.
+# Optional extras pull in third-party libraries for the richer feature set.
+# =============================================================================
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argo-brain"
+version = "3.0.0"
+description = "ARGO Agent v3.0 — Python brain (agent loop, tools, memory, channels, plugins)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+authors = [{ name = "ARGO Agent Project", email = "akbarshohanvarbekov@gmail.com" }]
+maintainers = [{ name = "oybek1097" }]
+keywords = [
+    "ai",
+    "agent",
+    "llm",
+    "devops",
+    "multilingual",
+    "central-asia",
+    "uzbek",
+    "chatbot",
+    "automation",
+]
+
+# The brain core requires nothing beyond the Python 3.12 stdlib.
+dependencies = []
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Communications :: Chat",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: System :: Systems Administration",
+    "Natural Language :: English",
+    "Natural Language :: Russian",
+    "Typing :: Typed",
+]
+
+[project.optional-dependencies]
+# Full third-party stack for the complete brain feature set.
+full = [
+    "pydantic-settings>=2.0",
+    "anthropic>=0.40",
+    "aiosqlite>=0.20",
+    "httpx>=0.27",
+]
+# Development and CI tooling.
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "build>=1.2",
+    "twine>=5.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/oybek1097/ARGO"
+Documentation = "https://github.com/oybek1097/ARGO/blob/main/README.md"
+Source = "https://github.com/oybek1097/ARGO"
+Issues = "https://github.com/oybek1097/ARGO/issues"
+Changelog = "https://github.com/oybek1097/ARGO/blob/main/CHANGELOG.md"
+
+[project.scripts]
+argo-brain = "argo_brain.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["argo_brain*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+argo_brain = ["**/*.md", "**/*.txt", "**/*.json", "**/*.yaml", "**/*.yml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

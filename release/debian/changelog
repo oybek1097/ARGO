@@ -1,0 +1,7 @@
+argo-agent (3.0.0-1) stable; urgency=medium
+
+  * General availability release of ARGO Agent v3.0.0.
+  * Ships argo-core (Rust HTTP gateway) and argo-brain (Python 3.12 brain).
+  * Installs a systemd service for the argo-core gateway on HTTP port 8000.
+
+ -- ARGO Agent Project <maintainers@argo-agent.dev>  Wed, 20 May 2026 12:00:00 +0000

@@ -1,0 +1,20 @@
+#!/bin/sh
+# prerm maintainer script for argo-agent.
+# Stops and disables the systemd service before the package is removed.
+set -e
+
+case "$1" in
+    remove|deconfigure)
+        if [ -d /run/systemd/system ]; then
+            systemctl stop argo-agent.service || true
+            systemctl disable argo-agent.service || true
+        fi
+        ;;
+    upgrade|failed-upgrade)
+        # Leave the service running across upgrades; postinst restarts it.
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

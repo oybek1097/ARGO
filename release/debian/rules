@@ -1,0 +1,61 @@
+#!/usr/bin/make -f
+# Debian packaging rules for argo-agent.
+#
+# Builds both ARGO components and installs them into the package staging
+# tree (debian/argo-agent):
+#   * argo-core  — compiled from Rust with cargo, installed to /usr/bin.
+#   * argo-brain — the stdlib-only Python package, installed under
+#                  /usr/lib/argo-agent and launched by a thin /usr/bin wrapper.
+#
+# This is a hand-rolled override of the default debhelper sequence so the
+# Cargo build and the Python copy are explicit and easy to audit.
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+# Staging directory for the binary package.
+PKGDIR := debian/argo-agent
+
+%:
+	dh $@
+
+# --- build: compile argo-core ----------------------------------------------
+override_dh_auto_build:
+	cd argo-core && cargo build --release --locked
+	test -x argo-core/target/release/argo-core
+
+# Nothing to configure or unit-test in the packaging step; argo-brain is
+# stdlib-only and needs no build.
+override_dh_auto_configure:
+override_dh_auto_test:
+
+# --- install: lay out the package tree -------------------------------------
+override_dh_auto_install:
+	# argo-core binary.
+	install -D -m 0755 argo-core/target/release/argo-core \
+		$(PKGDIR)/usr/bin/argo-core
+	# argo-brain Python package.
+	mkdir -p $(PKGDIR)/usr/lib/argo-agent
+	cp -r argo-brain/argo_brain $(PKGDIR)/usr/lib/argo-agent/
+	# `argo` wrapper: `argo core ...` runs the gateway, everything else
+	# is forwarded to `python3 -m argo_brain`.
+	mkdir -p $(PKGDIR)/usr/bin
+	printf '%s\n' \
+		'#!/bin/bash' \
+		'# ARGO Agent launcher (installed by the argo-agent package).' \
+		'set -euo pipefail' \
+		'if [ "$${1:-}" = "core" ]; then' \
+		'  shift' \
+		'  exec /usr/bin/argo-core "$$@"' \
+		'fi' \
+		'export PYTHONPATH="/usr/lib/argo-agent$${PYTHONPATH:+:$$PYTHONPATH}"' \
+		'exec python3 -m argo_brain "$$@"' \
+		> $(PKGDIR)/usr/bin/argo
+	chmod 0755 $(PKGDIR)/usr/bin/argo
+	# systemd service unit for the argo-core gateway.
+	install -D -m 0644 debian/argo-agent.service \
+		$(PKGDIR)/lib/systemd/system/argo-agent.service
+
+# The systemd unit is installed by hand above, so skip dh_installsystemd's
+# own search (it would otherwise look for files it does not own).
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start --name=argo-agent
