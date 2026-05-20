@@ -81,6 +81,20 @@ async def _cmd_chat() -> int:
     return 0
 
 
+async def _cmd_tui() -> int:
+    """Runs the rich interactive terminal UI."""
+    from argo_brain.tui import TUI
+
+    settings = load_settings()
+    settings.ensure_dirs()
+    agent = _build_agent(settings)
+    try:
+        await TUI().run(agent)
+    finally:
+        agent.close()
+    return 0
+
+
 async def _cmd_mcp() -> int:
     """Connects configured MCP servers and lists their discovered tools."""
     from argo_brain.mcp import load_mcp_servers, read_mcp_config
@@ -350,6 +364,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("setup", help="interactive first-run setup wizard")
     sub.add_parser("doctor", help="diagnose the installation")
     sub.add_parser("chat", help="interactive conversation")
+    sub.add_parser("tui", help="rich interactive terminal UI")
     serve_p = sub.add_parser("serve", help="run the HTTP API gateway")
     serve_p.add_argument("--host", default="127.0.0.1")
     serve_p.add_argument("--port", type=int, default=8000)
@@ -371,6 +386,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_doctor()
     if cmd == "chat":
         return asyncio.run(_cmd_chat())
+    if cmd == "tui":
+        return asyncio.run(_cmd_tui())
     if cmd == "ipc":
         return asyncio.run(_cmd_ipc())
     if cmd == "telegram":

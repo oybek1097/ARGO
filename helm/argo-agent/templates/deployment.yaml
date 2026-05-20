@@ -1,0 +1,113 @@
+# Kubernetes Deployment for the ARGO Agent.
+# Each pod runs two containers — argo-core and argo-brain — sharing an
+# emptyDir volume for the Unix IPC socket and a PVC-backed volume for data.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-argo-agent
+  labels:
+    app.kubernetes.io/name: argo-agent
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argo-agent
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: argo-agent
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        # -----------------------------------------------------------------
+        # argo-core — Rust HTTP gateway.
+        # -----------------------------------------------------------------
+        - name: argo-core
+          image: "{{ .Values.images.core.repository }}:{{ .Values.images.core.tag }}"
+          imagePullPolicy: {{ .Values.images.core.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: ARGO_HOME
+              value: /data
+            - name: ARGO_CORE_HOST
+              value: "0.0.0.0"
+            - name: ARGO_CORE_PORT
+              value: "{{ .Values.service.targetPort }}"
+            - name: ARGO_IPC_SOCKET
+              value: {{ .Values.ipc.socketPath | quote }}
+          # Liveness/readiness probes hit the gateway's /api/health endpoint.
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: ipc-socket
+              mountPath: /run/argo
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.resources.core | nindent 12 }}
+        # -----------------------------------------------------------------
+        # argo-brain — Python brain (IPC server).
+        # -----------------------------------------------------------------
+        - name: argo-brain
+          image: "{{ .Values.images.brain.repository }}:{{ .Values.images.brain.tag }}"
+          imagePullPolicy: {{ .Values.images.brain.pullPolicy }}
+          env:
+            - name: ARGO_HOME
+              value: /data
+            - name: ARGO_IPC_SOCKET
+              value: {{ .Values.ipc.socketPath | quote }}
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          volumeMounts:
+            - name: ipc-socket
+              mountPath: /run/argo
+            - name: data
+              mountPath: /data
+          resources:
+            {{- toYaml .Values.resources.brain | nindent 12 }}
+      volumes:
+        # Shared, ephemeral directory for the Unix IPC socket.
+        - name: ipc-socket
+          emptyDir: {}
+        # Persistent data directory.
+        - name: data
+        {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-argo-data
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+{{- if .Values.persistence.enabled }}
+---
+# PersistentVolumeClaim backing the shared ARGO data directory.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-argo-data
+  labels:
+    app.kubernetes.io/name: argo-agent
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  {{- with .Values.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end }}

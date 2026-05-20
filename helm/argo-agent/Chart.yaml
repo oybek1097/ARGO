@@ -1,0 +1,21 @@
+# Helm chart for the ARGO Agent v3.0 platform.
+# Deploys the Rust gateway (argo-core) and the Python brain (argo-brain)
+# together in a single pod, sharing the IPC socket and data volumes.
+apiVersion: v2
+name: argo-agent
+description: ARGO Agent v3.0 — Rust gateway + Python brain.
+type: application
+# Chart version — bump on every chart change.
+version: 0.1.0
+# Version of the ARGO Agent application this chart deploys.
+appVersion: "3.0.0"
+keywords:
+  - argo
+  - ai-agent
+  - rust
+  - python
+home: https://github.com/argo-agent/argo
+sources:
+  - https://github.com/argo-agent/argo
+maintainers:
+  - name: ARGO Agent Loyihasi

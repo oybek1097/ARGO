@@ -1,0 +1,76 @@
+# ARGO Agent v3.0 — Docker Compose deployment.
+#
+# Two services:
+#   - argo-brain : Python brain, runs the IPC server on a Unix socket.
+#   - argo-core  : Rust gateway, exposes the HTTP API on port 8000 and
+#                  talks to the brain over the shared IPC socket.
+#
+# Two shared volumes:
+#   - argo-ipc   : holds the Unix IPC socket ($ARGO_IPC_SOCKET).
+#   - argo-data  : holds persistent data (SQLite DB, skills, etc.).
+#
+# Both services agree on ARGO_IPC_SOCKET so the socket path matches.
+
+services:
+  # ---------------------------------------------------------------------
+  # argo-brain — Python brain (IPC server)
+  # ---------------------------------------------------------------------
+  argo-brain:
+    build:
+      context: ./argo-brain
+      dockerfile: Dockerfile
+    image: argo-agent/argo-brain:latest
+    restart: unless-stopped
+    environment:
+      # ARGO_HOME holds persistent data; the IPC socket lives in /run/argo.
+      ARGO_HOME: /data
+      ARGO_IPC_SOCKET: /run/argo/argo.sock
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      # Shared socket directory (same mount point as argo-core).
+      - argo-ipc:/run/argo
+      # Shared persistent data directory.
+      - argo-data:/data
+
+  # ---------------------------------------------------------------------
+  # argo-core — Rust gateway (HTTP API)
+  # ---------------------------------------------------------------------
+  argo-core:
+    build:
+      context: ./argo-core
+      dockerfile: Dockerfile
+    image: argo-agent/argo-core:latest
+    restart: unless-stopped
+    # Start argo-core only after the brain container is up.
+    depends_on:
+      - argo-brain
+    ports:
+      # Host:Container — HTTP gateway.
+      - "8000:8000"
+    environment:
+      ARGO_HOME: /data
+      ARGO_CORE_HOST: 0.0.0.0
+      ARGO_CORE_PORT: "8000"
+      # Must match argo-brain's ARGO_IPC_SOCKET.
+      ARGO_IPC_SOCKET: /run/argo/argo.sock
+    volumes:
+      # Same shared socket directory as argo-brain.
+      - argo-ipc:/run/argo
+      # Same shared persistent data directory as argo-brain.
+      - argo-data:/data
+    healthcheck:
+      # The gateway exposes /api/health (see README).
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# -----------------------------------------------------------------------
+# Named volumes shared between the two services.
+# -----------------------------------------------------------------------
+volumes:
+  # Holds the Unix IPC socket.
+  argo-ipc:
+  # Holds persistent data (SQLite database, skills, etc.).
+  argo-data:

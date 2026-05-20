@@ -1,0 +1,22 @@
+# Service exposing the argo-core HTTP gateway.
+# Selects the argo-agent pods and forwards the service port to the
+# argo-core container's HTTP port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-argo-core
+  labels:
+    app.kubernetes.io/name: argo-agent
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: argo-agent
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      protocol: TCP
+      # External service port.
+      port: {{ .Values.service.port }}
+      # argo-core container port.
+      targetPort: http

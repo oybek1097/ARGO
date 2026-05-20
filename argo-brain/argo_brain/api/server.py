@@ -77,6 +77,15 @@ class HTTPGateway:
                     user_id = qs.get("user_id", ["anon"])[0]
                     history = asyncio.run(agent.memory.history(user_id))
                     self._send(200, {"history": history})
+                elif parsed.path in ("/", "/dashboard"):
+                    from argo_brain.api.dashboard import dashboard_page
+
+                    body = dashboard_page().encode()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
                 else:
                     self._send(404, {"error": "not found"})
 

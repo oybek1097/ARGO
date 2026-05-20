@@ -16,6 +16,8 @@ from argo_brain.channels.base import (
 from argo_brain.channels.email_channel import EmailChannel
 from argo_brain.channels.irc import IRCChannel
 from argo_brain.channels.matrix import MatrixChannel
+from argo_brain.channels.mattermost import MattermostChannel
+from argo_brain.channels.rocketchat import RocketChatChannel
 from argo_brain.channels.runner import run_channel
 from argo_brain.channels.telegram import TelegramChannel
 from argo_brain.channels.webhook import (
@@ -34,6 +36,8 @@ __all__ = [
     "GenericWebhookChannel",
     "IRCChannel",
     "MatrixChannel",
+    "MattermostChannel",
+    "RocketChatChannel",
     "SlackChannel",
     "TelegramChannel",
     "WebhookChannel",

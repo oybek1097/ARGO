@@ -1,0 +1,43 @@
+# Default values for the argo-agent Helm chart.
+# Override any of these with `helm install -f my-values.yaml` or `--set`.
+
+# Number of pod replicas. Each pod runs argo-core + argo-brain together.
+replicaCount: 1
+
+# Container images for the two components.
+images:
+  # argo-core — Rust HTTP gateway.
+  core:
+    repository: argo-agent/argo-core
+    tag: latest
+    pullPolicy: IfNotPresent
+  # argo-brain — Python brain (IPC server).
+  brain:
+    repository: argo-agent/argo-brain
+    tag: latest
+    pullPolicy: IfNotPresent
+
+# Service exposing the argo-core HTTP gateway.
+service:
+  type: ClusterIP
+  # External service port.
+  port: 8000
+  # Container port argo-core listens on.
+  targetPort: 8000
+
+# Shared IPC socket path. Both containers must agree on this value.
+ipc:
+  socketPath: /run/argo/argo.sock
+
+# Persistent storage for ARGO data (SQLite DB, skills, etc.).
+persistence:
+  enabled: true
+  # Size of the data PersistentVolumeClaim.
+  size: 1Gi
+  accessMode: ReadWriteOnce
+  # storageClass: ""   # leave empty to use the cluster default
+
+# Resource requests/limits for the containers (optional, tune per cluster).
+resources:
+  core: {}
+  brain: {}

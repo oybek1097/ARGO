@@ -11,8 +11,10 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Agent core: the Plan → Execute loop (spec section 4.2)
 - Memory: L0 working memory (deque) + L1 persistent (SQLite + FTS5) +
   L2 vector store (stdlib hashing vectorizer, cosine-similarity search)
-- Tool system: the `Tool` ABC, a registry, and 39 built-in tools across the
-  basic, web, terminal, file, text, memory, devops and data toolsets
+- Tool system: the `Tool` ABC, a registry, and 45 built-in tools across the
+  basic, web, terminal, file, text, system, memory, devops and data toolsets
+- Checkpoint & handoff: file-snapshot checkpoints with restore, and
+  SQLite-backed handoff tickets (create/claim/pending)
 - DevOps tools: Git, Docker, kubectl, Vault, SSH, Ansible and Terraform —
   thin, audited CLI wrappers that fail cleanly if a CLI is absent
 - Data tools: sql_query, json_query, hash_text, base64, uuid, datetime
@@ -26,17 +28,19 @@ the project adheres to [Semantic Versioning](https://semver.org/).
   task delegation, mixture-of-agents and a DAG workflow runner
 - Cron: a scheduler with a natural-language schedule parser
 - Language detection: a uz/ru/kk/ky/tg/en heuristic
-- Channels: the `Channel` ABC plus Telegram (long polling), Email
-  (IMAP/SMTP), IRC (TCP), Matrix (client-server API), a generic webhook
-  adapter and Slack (Events API); a `/webhook/<platform>` route
+- Channels: the `Channel` ABC plus Telegram, Email (IMAP/SMTP), IRC (TCP),
+  Matrix, Mattermost, Rocket.Chat, a generic webhook adapter and Slack
+  (Events API); a `/webhook/<platform>` route
+- Interfaces: a rich terminal UI (`tui`) and a web dashboard served at `/`
 - MCP client + server: connects to external MCP servers over stdio
   (newline-delimited JSON-RPC 2.0) exposing their tools as
   `mcp_<server>_<tool>`, and exposes ARGO's own tools as an MCP server
 - Security: PII redaction pipeline (email/phone/card/IP/IBAN) and an
   append-only SQLite audit log
 - HTTP gateway and IPC server (Unix socket)
-- CLI: `setup`, `doctor`, `chat`, `serve`, `ipc`, `telegram`, `mcp`, `selftest`
-- 291 unit tests (stdlib `unittest`)
+- CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
+  `selftest`
+- 383 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
@@ -49,6 +53,8 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added — infrastructure
 - `scripts/setup.sh` — a one-shot installer
+- Deployment: docker-compose.yml, Dockerfiles for argo-core and argo-brain,
+  a Helm chart, and DEPLOYMENT.md
 - README, CHANGELOG, CONTRIBUTING, .gitignore
 
 [Unreleased]: https://github.com/oybek1097/ARGO
