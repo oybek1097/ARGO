@@ -19,10 +19,11 @@ Format [Keep a Changelog](https://keepachangelog.com/) ga, versiyalash
 - Multi-agent: doimiy SQLite Kanban (claim/complete/retry/block lifecycle)
 - Cron: scheduler + tabiiy til schedule parser
 - Til aniqlash: uz/ru/kk/ky/tg/en heuristikasi
-- Kanallar: `Channel` ABC + Telegram adapteri (Bot API, long polling)
+- Kanallar: `Channel` ABC + Telegram (long polling), generic webhook va
+  Slack (Events API) adapterlari; `/webhook/<platform>` gateway marshruti
 - HTTP gateway, IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `serve`, `ipc`, `telegram`, `selftest`
-- 73 ta unit test (stdlib `unittest`)
+- 84 ta unit test (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,

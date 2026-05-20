@@ -77,14 +77,32 @@ async def _cmd_ipc() -> int:
     return 0
 
 
+def _build_webhooks() -> dict:
+    """Builds the webhook channel map from the environment."""
+    import os
+
+    from argo_brain.channels import GenericWebhookChannel, SlackChannel
+
+    hooks: dict = {"generic": GenericWebhookChannel()}
+    slack_token = os.environ.get("SLACK_BOT_TOKEN")
+    if slack_token:
+        hooks["slack"] = SlackChannel(slack_token)
+    return hooks
+
+
 def _cmd_serve(host: str, port: int) -> int:
     from argo_brain.api import HTTPGateway
 
     settings = load_settings()
     settings.ensure_dirs()
-    gateway = HTTPGateway(settings, host=host, port=port, agent=_build_agent(settings))
+    webhooks = _build_webhooks()
+    gateway = HTTPGateway(
+        settings, host=host, port=port,
+        agent=_build_agent(settings), webhooks=webhooks,
+    )
     print(f"ARGO brain v{__version__} — HTTP gateway")
     print(f"Manzil: http://{host}:{port}  (to'xtatish: Ctrl+C)")
+    print(f"Webhook platformalar: {', '.join(webhooks)}")
     try:
         gateway.serve_forever()
     except KeyboardInterrupt:
