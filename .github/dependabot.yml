@@ -1,0 +1,80 @@
+# Dependabot configuration for the ARGO Agent v3.0 monorepo.
+#
+# The repository hosts three dependency ecosystems:
+#   * cargo          — argo-core, the Rust gateway (Cargo.lock).
+#   * github-actions — the workflows under .github/workflows/.
+#   * pip            — argo-brain, the Python brain.
+#
+# Note on argo-brain: the runtime is intentionally standard-library only
+# (dependencies = [] in argo-brain/pyproject.toml). The `pip` ecosystem entry
+# is still useful because the optional `full` and `dev` extras pin external
+# packages (anthropic, httpx, ruff, mypy, ...) that should receive updates.
+
+version: 2
+
+updates:
+  # --------------------------------------------------------------------
+  # argo-core — Rust gateway (Cargo)
+  # --------------------------------------------------------------------
+  - package-ecosystem: cargo
+    directory: /argo-core
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - rust
+    commit-message:
+      prefix: "deps(core)"
+    groups:
+      # Batch routine patch/minor bumps into a single PR to reduce noise.
+      cargo-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # --------------------------------------------------------------------
+  # GitHub Actions used by the workflows
+  # --------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "deps(ci)"
+    groups:
+      actions-all:
+        patterns:
+          - "*"
+
+  # --------------------------------------------------------------------
+  # argo-brain — Python brain (pip / pyproject optional extras)
+  # --------------------------------------------------------------------
+  - package-ecosystem: pip
+    directory: /argo-brain
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "deps(brain)"
+    groups:
+      pip-minor-and-patch:
+        update-types:
+          - minor
+          - patch

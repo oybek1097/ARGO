@@ -1,0 +1,144 @@
+# Security scanning for the ARGO Agent v3.0 monorepo.
+#
+# This workflow covers the `security-scan` stage from the Technical
+# Specification section 11. It runs on every push and pull request, and
+# additionally on a weekly schedule so that newly disclosed advisories are
+# caught even when the repository is quiet.
+#
+# Scans performed:
+#   * bandit      — static analysis of the Python source (argo_brain).
+#   * cargo audit — RustSec advisory check against Cargo.lock (argo-core).
+#   * semgrep     — multi-language pattern-based static analysis.
+#   * trivy       — vulnerability scan of the built Docker images.
+#
+# `continue-on-error` policy:
+#   Informational, noisy or non-deterministic steps (semgrep ruleset drift,
+#   trivy image builds that may fail for environmental reasons) are marked
+#   tolerant so they surface findings without blocking a merge. The two
+#   deterministic, low-noise gates — bandit at high severity/confidence and
+#   `cargo audit` — are NOT tolerant: a real P1 finding there fails the run.
+#   This matches the "no new security findings (P1+)" pre-merge check.
+
+name: security-scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    # Weekly, Monday 06:00 UTC — catches advisories disclosed since last push.
+    - cron: "0 6 * * 1"
+
+# Scans are read-only; SARIF upload (if enabled later) needs security-events.
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: security-scan-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bandit:
+    name: Bandit (Python SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install bandit
+        run: python -m pip install --upgrade bandit
+
+      - name: Run bandit (full report, informational)
+        # Full-severity report for visibility in the job log. Tolerant so the
+        # low/medium findings do not block; the gating run is the next step.
+        continue-on-error: true
+        working-directory: argo-brain
+        run: bandit -r argo_brain -ll
+
+      - name: Run bandit (high severity gate)
+        # Deterministic gate: only HIGH severity AND HIGH confidence findings
+        # fail the job. These are the P1-class issues from spec section 11.
+        working-directory: argo-brain
+        run: bandit -r argo_brain -lll -iii
+
+  cargo-audit:
+    name: cargo audit (RustSec advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: Run cargo audit on argo-core
+        # Deterministic gate: a known-vulnerable dependency fails the run.
+        working-directory: argo-core
+        run: cargo audit
+
+  semgrep:
+    name: Semgrep (multi-language SAST)
+    runs-on: ubuntu-latest
+    # Semgrep's `auto` config is fetched from the registry and evolves over
+    # time, so its results can drift between runs. Treat it as informational.
+    continue-on-error: true
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install semgrep
+        run: python -m pip install --upgrade semgrep
+
+      - name: Run semgrep
+        run: semgrep scan --config=auto --error --metrics=off
+
+  trivy:
+    name: Trivy (Docker image scan)
+    runs-on: ubuntu-latest
+    # Image builds depend on base-image availability and registry state, so
+    # the whole job is tolerant. Findings are still printed to the job log.
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - { name: argo-brain, context: argo-brain }
+          - { name: argo-core, context: argo-core }
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.component.name }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.component.context }}
+          push: false
+          load: true
+          tags: argo-agent/${{ matrix.component.name }}:scan
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: argo-agent/${{ matrix.component.name }}:scan
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
