@@ -10,16 +10,18 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 ### Added — argo-brain (Python brain)
 - Agent core: the Plan → Execute loop (spec section 4.2)
 - Memory: L0 working memory (deque) + L1 persistent (SQLite + FTS5) +
-  L2 vector store (stdlib hashing vectorizer, cosine-similarity search)
-- Tool system: the `Tool` ABC, a registry, and 45 built-in tools across the
-  basic, web, terminal, file, text, system, memory, devops and data toolsets
+  L2 vector store (cosine-similarity search) + L3 knowledge graph
+- Tool system: the `Tool` ABC, a registry, and 49 built-in tools across the
+  basic, web, terminal, file, text, system, workflow, memory, devops and
+  data toolsets
 - Checkpoint & handoff: file-snapshot checkpoints with restore, and
   SQLite-backed handoff tickets (create/claim/pending)
 - DevOps tools: Git, Docker, kubectl, Vault, SSH, Ansible and Terraform —
   thin, audited CLI wrappers that fail cleanly if a CLI is absent
 - Data tools: sql_query, json_query, hash_text, base64, uuid, datetime
 - LLM providers: `MockProvider` (no key) + real `AnthropicProvider`,
-  `OpenAIProvider` and `GeminiProvider` adapters
+  `OpenAIProvider`, `GeminiProvider`, `OllamaProvider` and a generic
+  `OpenAICompatibleProvider` (DeepSeek/Groq/Mistral/OpenRouter/Together)
 - RL: a trajectory collector with ShareGPT / SFT / JSONL export
 - Compliance modules: UZ-152, RU-152-FZ, GDPR and CN-PIPL policy modules
 - Skills: an agentskills.io-compatible markdown loader with trigger matching
@@ -29,8 +31,11 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Cron: a scheduler with a natural-language schedule parser
 - Language detection: a uz/ru/kk/ky/tg/en heuristic
 - Channels: the `Channel` ABC plus Telegram, Email (IMAP/SMTP), IRC (TCP),
-  Matrix, Mattermost, Rocket.Chat, a generic webhook adapter and Slack
-  (Events API); a `/webhook/<platform>` route
+  Matrix, Mattermost, Rocket.Chat, LINE, Viber, WhatsApp, Twilio SMS, a
+  generic webhook adapter and Slack (Events API); a `/webhook/<platform>`
+  route
+- Skills: an agentskills.io-compatible markdown loader and a curator
+  (grading, duplicate detection, archive recommendations)
 - Interfaces: a rich terminal UI (`tui`) and a web dashboard served at `/`
 - MCP client + server: connects to external MCP servers over stdio
   (newline-delimited JSON-RPC 2.0) exposing their tools as
@@ -40,7 +45,7 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
   `selftest`
-- 383 unit tests (stdlib `unittest`)
+- 493 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
@@ -55,6 +60,8 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - `scripts/setup.sh` — a one-shot installer
 - Deployment: docker-compose.yml, Dockerfiles for argo-core and argo-brain,
   a Helm chart, and DEPLOYMENT.md
+- Documentation: a `docs/` site (introduction, installation, quickstart,
+  architecture, configuration, tools, channels, CLI, contributing)
 - README, CHANGELOG, CONTRIBUTING, .gitignore
 
 [Unreleased]: https://github.com/oybek1097/ARGO

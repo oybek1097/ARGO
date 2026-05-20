@@ -136,6 +136,10 @@ def get_provider(model: str = "mock") -> LLMProvider:
     stack. More native adapters (Yandex GPT, ...) will register here later.
     """
     if model and model != "mock":
+        if model.startswith("ollama"):
+            from argo_brain.providers.ollama import OllamaProvider
+
+            return OllamaProvider(model=model.removeprefix("ollama/"))
         if os.environ.get("ANTHROPIC_API_KEY"):
             from argo_brain.providers.anthropic import AnthropicProvider
 

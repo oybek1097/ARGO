@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from argo_brain.memory.graph import KnowledgeGraph
 from argo_brain.memory.persistent import PersistentMemory
 from argo_brain.memory.vector import VectorMemory
 from argo_brain.memory.working import WorkingMemory
@@ -40,6 +41,7 @@ class MemoryManager:
         self.working = WorkingMemory(maxlen=working_size)
         self.persistent = PersistentMemory(db_path)
         self.vector = VectorMemory()
+        self.graph = KnowledgeGraph()
 
     def close(self) -> None:
         self.persistent.close()
