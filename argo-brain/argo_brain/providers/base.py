@@ -129,14 +129,23 @@ def get_provider(model: str = "mock") -> LLMProvider:
     """Returns a provider based on the model name.
 
     * `mock` (or no API key) -> `MockProvider`, which needs no credentials.
-    * Any other model with `ANTHROPIC_API_KEY` set -> `AnthropicProvider`.
+    * A non-mock model picks the first provider whose API key is set:
+      Anthropic, then OpenAI, then Gemini.
 
-    More native adapters (OpenAI, Gemini, Yandex GPT, ...) will register here
-    in later sprints; the signature stays stable.
+    Providers are imported lazily so the mock path never needs the network
+    stack. More native adapters (Yandex GPT, ...) will register here later.
     """
-    if model and model != "mock" and os.environ.get("ANTHROPIC_API_KEY"):
-        # Imported lazily so the mock path never requires the network stack.
-        from argo_brain.providers.anthropic import AnthropicProvider
+    if model and model != "mock":
+        if os.environ.get("ANTHROPIC_API_KEY"):
+            from argo_brain.providers.anthropic import AnthropicProvider
 
-        return AnthropicProvider(model=model)
+            return AnthropicProvider(model=model)
+        if os.environ.get("OPENAI_API_KEY"):
+            from argo_brain.providers.openai import OpenAIProvider
+
+            return OpenAIProvider(model=model)
+        if os.environ.get("GEMINI_API_KEY"):
+            from argo_brain.providers.gemini import GeminiProvider
+
+            return GeminiProvider(model=model)
     return MockProvider()

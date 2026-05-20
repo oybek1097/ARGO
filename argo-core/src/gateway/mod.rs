@@ -19,6 +19,10 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/version", get(routes::version))
         .route("/api/chat", post(routes::chat))
         .route("/api/history/:uid", get(routes::history))
+        // WebSocket chat endpoint.
+        .route("/ws/:uid", get(routes::ws))
+        // OpenAI-compatible chat completions endpoint.
+        .route("/v1/chat/completions", post(routes::chat_completions))
         .route("/metrics", get(routes::metrics))
         .with_state(state)
 }
