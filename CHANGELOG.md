@@ -11,9 +11,13 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Agent core: the Plan → Execute loop (spec section 4.2)
 - Memory: L0 working memory (deque) + L1 persistent (SQLite + FTS5) +
   L2 vector store (cosine-similarity search) + L3 knowledge graph
-- Tool system: the `Tool` ABC, a registry, and 55 built-in tools across the
-  basic, web, terminal, file, text, format, system, workflow, memory,
+- Tool system: the `Tool` ABC, a registry, and 58 built-in tools across the
+  basic, web, terminal, file, text, format, system, workflow, rag, memory,
   devops and data toolsets
+- RAG: document ingest / search / summarize tools over the L2 vector store
+- i18n: a 7-locale message catalogue (en/ru/uz/kk/ky/tg/tr) and Central
+  Asian language-pack metadata
+- OpenAI-compatible proxy server routing to the agent
 - Terminal backends: local, Docker and SSH command execution (spec 4.15)
 - Context files: a loader for MEMORY.md/USER.md/AGENTS.md/.argo.md and
   `@`-reference expansion
@@ -25,7 +29,9 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - LLM providers: `MockProvider` (no key) + real `AnthropicProvider`,
   `OpenAIProvider`, `GeminiProvider`, `OllamaProvider`, a generic
   `OpenAICompatibleProvider` (DeepSeek/Groq/Mistral/OpenRouter/Together),
-  and CIS-region `YandexGPTProvider` and `GigaChatProvider`
+  CIS-region `YandexGPTProvider` and `GigaChatProvider`, plus
+  `CohereProvider`, `AzureOpenAIProvider` and NVIDIA-NIM/Fireworks/
+  Perplexity factories
 - Observability: a Prometheus `MetricsCollector`, trace spans and a
   structured JSON logger
 - Session/prompt cache: a fingerprinted per-user TTL cache
@@ -56,7 +62,7 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
   `selftest`
-- 750 unit tests (stdlib `unittest`)
+- 950 unit tests (stdlib `unittest`), including end-to-end and smoke suites
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
@@ -66,6 +72,10 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - A per-IP rate limiter guarding the chat endpoints
 - An OpenAPI 3.1 spec generator (served at `/openapi.json`)
 - 12 Rust unit tests (memory ring buffer, config loading, rate limiter)
+
+### Added — argo-cli (Rust CLI)
+- A lightweight `argo` command-line client for the gateway (`health`,
+  `chat`, `history`, `version`) — 13 Rust unit tests
 - L0 working memory (DashMap, a per-user ring buffer)
 - A Unix-socket IPC client to argo-brain
 - Prometheus metrics

@@ -1,0 +1,26 @@
+[package]
+name = "argo-cli"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "argo-cli — a lightweight command-line client for the argo-core gateway"
+authors = ["ARGO Agent Loyihasi"]
+
+[[bin]]
+name = "argo"
+path = "src/main.rs"
+
+[lib]
+name = "argo_cli"
+path = "src/lib.rs"
+
+[dependencies]
+ureq = { version = "2", features = ["json"] }
+serde_json = "1"
+
+# Release profile tuned for a small, stripped binary.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
