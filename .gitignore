@@ -12,8 +12,9 @@ venv/
 .ruff_cache/
 
 # Rust
-/argo-core/target/
+target/
 **/*.rs.bk
+Cargo.lock.bak
 
 # Runtime data
 data/
