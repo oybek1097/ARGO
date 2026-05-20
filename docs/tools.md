@@ -101,4 +101,9 @@ clients.
 Beyond tools, ARGO has a 5-hook plugin API (pre-tool, post-tool, on-response
 and related hooks). Plugins can veto tool calls, transform tool results and
 react to responses. Plugin files live in `~/.argo/plugins/`.
-</content>
+
+## See also
+
+- [Skills](skills.md) — Markdown instructions that tell the agent *what* to do.
+- [Hub & Marketplace](hub.md) — packaging and sharing skills and plugins.
+- [Configuration](configuration.md) — configuring MCP servers.

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — ARGO Agent v3.0</title>
+  <meta name="description" content="Documentation for ARGO Agent v3.0 — guides, architecture reference, tools, channels and the plugin API.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-text">ARGO<span class="brand-version">v3.0</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#architecture">Architecture</a></li>
+        <li><a href="index.html#quickstart">Quick start</a></li>
+        <li><a href="docs.html">Docs</a></li>
+        <li><a href="download.html">Download</a></li>
+        <li><a href="https://github.com/argo-agent/argo" class="nav-cta">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="page-hero">
+      <div class="container">
+        <p class="badge"><span class="badge-dot" aria-hidden="true"></span> Alpha — approaching GA</p>
+        <h1>Documentation</h1>
+        <p>
+          Everything you need to install, configure, extend and operate
+          ARGO Agent. The full documentation set lives under
+          <code>/docs/</code> and ships with the repository.
+        </p>
+        <p>
+          <a href="/docs/" class="btn btn-primary">Open the docs</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Browse by topic</h2>
+        <p class="section-lead">Start with the guides, then dive into the reference material as you need it.</p>
+        <div class="grid link-grid">
+
+          <a class="link-card" href="/docs/getting-started/">
+            <h3>Getting started</h3>
+            <p>Install ARGO, run the setup wizard and hold your first conversation with the agent.</p>
+          </a>
+
+          <a class="link-card" href="/docs/architecture/">
+            <h3>Architecture</h3>
+            <p>How <code>argo-core</code> (Rust) and <code>argo-brain</code> (Python) split responsibilities and talk over IPC.</p>
+          </a>
+
+          <a class="link-card" href="/docs/configuration/">
+            <h3>Configuration</h3>
+            <p>Configuration files, environment variables, LLM provider setup and the diagnostics command.</p>
+          </a>
+
+          <a class="link-card" href="/docs/tools/">
+            <h3>Built-in tools</h3>
+            <p>Reference for the bundled tool groups — web, files, terminal, memory and the DevOps stack.</p>
+          </a>
+
+          <a class="link-card" href="/docs/channels/">
+            <h3>Messaging channels</h3>
+            <p>Connect ARGO to Telegram, Slack, webhooks and the growing list of supported platforms.</p>
+          </a>
+
+          <a class="link-card" href="/docs/skills/">
+            <h3>Skills &amp; curator</h3>
+            <p>Compose agent behavior from bundled skills and the curator pipeline.</p>
+          </a>
+
+          <a class="link-card" href="/docs/plugins/">
+            <h3>Plugin API</h3>
+            <p>Extend ARGO with the five-hook plugin API and publish to the marketplace.</p>
+          </a>
+
+          <a class="link-card" href="/docs/deployment/">
+            <h3>Deployment</h3>
+            <p>Run ARGO with Docker, Helm or natively — including fully airgapped, sovereign setups.</p>
+          </a>
+
+          <a class="link-card" href="/docs/languages/">
+            <h3>Languages</h3>
+            <p>Language detection and response routing for Uzbek, Russian, Kazakh, Kyrgyz and Tajik.</p>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">Reference documents</h2>
+        <p class="section-lead">The authoritative project documents ship in the repository root.</p>
+        <div class="grid link-grid">
+          <a class="link-card" href="https://github.com/argo-agent/argo/blob/main/ARGO_AGENT_v3_Technical_Specification.md">
+            <h3>Technical specification</h3>
+            <p>The full v3.0 spec — architecture, IPC protocol, roadmap and sprint plan.</p>
+          </a>
+          <a class="link-card" href="https://github.com/argo-agent/argo/blob/main/ARGO_Executive_Summary.md">
+            <h3>Executive summary</h3>
+            <p>A one-page overview of ARGO's goals, positioning and key numbers.</p>
+          </a>
+          <a class="link-card" href="https://github.com/argo-agent/argo/blob/main/CHANGELOG.md">
+            <h3>Changelog</h3>
+            <p>Release history and what changed in each sprint.</p>
+          </a>
+        </div>
+
+        <div class="note-box">
+          ARGO v3.0 is alpha software approaching general availability. The
+          documentation is evolving alongside the project &mdash; if something
+          is missing or unclear, please open an issue on
+          <a href="https://github.com/argo-agent/argo/issues">GitHub</a>.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-text">ARGO<span class="brand-version">v3.0</span></span>
+        <p class="footer-tag">Open-source, multilingual AI agent platform.</p>
+      </div>
+      <nav class="footer-col" aria-label="Project">
+        <h4>Project</h4>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#architecture">Architecture</a>
+        <a href="download.html">Download</a>
+        <a href="docs.html">Documentation</a>
+      </nav>
+      <nav class="footer-col" aria-label="Community">
+        <h4>Community</h4>
+        <a href="https://github.com/argo-agent/argo">GitHub</a>
+        <a href="https://github.com/argo-agent/argo/issues">Issues</a>
+        <a href="https://github.com/argo-agent/argo/blob/main/CONTRIBUTING.md">Contributing</a>
+        <a href="https://github.com/argo-agent/argo/blob/main/LICENSE">MIT License</a>
+      </nav>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="footerYear">2026</span> ARGO Project. Released under the MIT License.</p>
+      <p>ARGO v3.0 is alpha software approaching general availability — not yet production-ready.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

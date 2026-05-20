@@ -136,4 +136,3 @@ python3 -m argo_brain version
 ```
 
 Prints the `argo-brain` version.
-</content>

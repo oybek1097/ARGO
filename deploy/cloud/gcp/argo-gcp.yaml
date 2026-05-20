@@ -1,0 +1,112 @@
+# ---------------------------------------------------------------------------
+# ARGO Agent v3.0 — Google Cloud Deployment Manager configuration.
+#
+# Provisions a single Compute Engine VM running both ARGO services
+# (argo-core + argo-brain) via Docker Compose, plus a firewall rule that
+# opens TCP 8000 (HTTP API) and TCP 22 (SSH).
+#
+# Deploy:
+#   gcloud deployment-manager deployments create argo --config argo-gcp.yaml
+#
+# The startup script below is the inline equivalent of startup-script.sh
+# in this directory. If you prefer the plain `gcloud compute instances
+# create` flow, see this directory's README — it attaches
+# startup-script.sh directly without Deployment Manager.
+# ---------------------------------------------------------------------------
+
+resources:
+
+  # --- Compute Engine instance -------------------------------------------
+  - name: argo-agent-vm
+    type: compute.v1.instance
+    properties:
+      # Adjust the zone to suit your region.
+      zone: us-central1-a
+      # e2-medium = 2 vCPU / 4 GB — the recommended minimum for the
+      # first-boot Rust build.
+      machineType: zones/us-central1-a/machineTypes/e2-medium
+      disks:
+        - deviceName: boot
+          type: PERSISTENT
+          boot: true
+          autoDelete: true
+          initializeParams:
+            sourceImage: projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts
+            diskSizeGb: 20
+            diskType: zones/us-central1-a/diskTypes/pd-balanced
+      networkInterfaces:
+        - network: global/networks/default
+          # An access config gives the VM an ephemeral public IP, so the
+          # HTTP API is reachable from the Internet.
+          accessConfigs:
+            - name: External NAT
+              type: ONE_TO_ONE_NAT
+      tags:
+        items:
+          - argo-agent
+      metadata:
+        items:
+          # Branch or tag of the ARGO repository to deploy.
+          - key: argo-repo-ref
+            value: main
+          # Startup script: install Docker, clone ARGO, docker compose up.
+          - key: startup-script
+            value: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+              export DEBIAN_FRONTEND=noninteractive
+
+              ARGO_REPO_URL="https://github.com/argo-agent/argo.git"
+              ARGO_REPO_REF="$(curl -fsS -H 'Metadata-Flavor: Google' \
+                'http://metadata.google.internal/computeMetadata/v1/instance/attributes/argo-repo-ref' \
+                2>/dev/null || echo main)"
+              ARGO_DIR="/opt/argo/ARGO"
+
+              echo "[argo] Installing Docker Engine..."
+              apt-get update -y
+              apt-get install -y ca-certificates curl git
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+                -o /etc/apt/keyrings/docker.asc
+              chmod a+r /etc/apt/keyrings/docker.asc
+              echo \
+                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+                https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+                > /etc/apt/sources.list.d/docker.list
+              apt-get update -y
+              apt-get install -y docker-ce docker-ce-cli containerd.io \
+                docker-buildx-plugin docker-compose-plugin
+              systemctl enable --now docker
+
+              echo "[argo] Cloning the ARGO repository (${ARGO_REPO_REF})..."
+              mkdir -p /opt/argo
+              git clone --depth 1 --branch "${ARGO_REPO_REF}" \
+                "${ARGO_REPO_URL}" "${ARGO_DIR}"
+
+              echo "[argo] Building and starting ARGO..."
+              cd "${ARGO_DIR}"
+              docker compose up -d --build
+              echo "[argo] Done. API will be available on TCP port 8000."
+
+  # --- Firewall rule ------------------------------------------------------
+  - name: argo-agent-allow
+    type: compute.v1.firewall
+    properties:
+      network: global/networks/default
+      # Applies only to instances tagged "argo-agent".
+      targetTags:
+        - argo-agent
+      sourceRanges:
+        - 0.0.0.0/0
+      allowed:
+        - IPProtocol: tcp
+          ports:
+            - "22"
+            - "8000"
+
+# Outputs surface the VM's public IP after deployment.
+outputs:
+  - name: instanceName
+    value: $(ref.argo-agent-vm.name)
+  - name: publicIp
+    value: $(ref.argo-agent-vm.networkInterfaces[0].accessConfigs[0].natIP)

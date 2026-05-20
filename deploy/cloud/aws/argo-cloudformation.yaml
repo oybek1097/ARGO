@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  ARGO Agent v3.0 — one-click deployment on Amazon EC2.
+  Provisions a single EC2 instance running both ARGO services
+  (argo-core + argo-brain) via Docker Compose, plus a security group
+  that opens TCP 8000 (HTTP API) and TCP 22 (SSH).
+
+# ---------------------------------------------------------------------------
+# Parameters
+# ---------------------------------------------------------------------------
+Parameters:
+
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+    Description: >
+      EC2 instance type. t3.medium (2 vCPU / 4 GB) is the recommended
+      minimum, since the first boot compiles argo-core from source.
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 key pair to enable SSH access.
+
+  SSHLocation:
+    Type: String
+    Default: 0.0.0.0/0
+    MinLength: 9
+    MaxLength: 18
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    Description: >
+      CIDR range allowed to reach SSH (port 22). Narrow this to your own
+      IP for anything beyond a quick evaluation.
+
+  ApiLocation:
+    Type: String
+    Default: 0.0.0.0/0
+    MinLength: 9
+    MaxLength: 18
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    Description: CIDR range allowed to reach the ARGO HTTP API (port 8000).
+
+  ArgoRepoUrl:
+    Type: String
+    Default: https://github.com/argo-agent/argo.git
+    Description: Git repository URL to clone on the instance.
+
+  ArgoRepoRef:
+    Type: String
+    Default: main
+    Description: Git branch or tag to deploy.
+
+  VolumeSizeGb:
+    Type: Number
+    Default: 20
+    MinValue: 16
+    Description: Size of the root EBS volume in GiB.
+
+# ---------------------------------------------------------------------------
+# Mappings — Ubuntu 22.04 LTS (amd64) AMIs by region (Canonical, hvm-ssd).
+# Update these if you deploy in a region not listed below.
+# ---------------------------------------------------------------------------
+Mappings:
+  RegionAmi:
+    us-east-1:
+      Ami: ami-0e2c8caa4b6378d8c
+    us-west-2:
+      Ami: ami-03f8acd418785369b
+    eu-west-1:
+      Ami: ami-0c1c30571d2dae5c9
+    eu-central-1:
+      Ami: ami-0faab6bdbac9486fb
+    ap-south-1:
+      Ami: ami-0f58b397bc5c1f2e8
+    ap-southeast-1:
+      Ami: ami-078c1149d8ad719a7
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+Resources:
+
+  ArgoSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ARGO Agent — allow SSH (22) and the HTTP API (8000).
+      SecurityGroupIngress:
+        - Description: SSH administration access.
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+        - Description: ARGO HTTP API (argo-core gateway).
+          IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: !Ref ApiLocation
+      Tags:
+        - Key: Name
+          Value: argo-agent-sg
+
+  ArgoInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [RegionAmi, !Ref "AWS::Region", Ami]
+      SecurityGroupIds:
+        - !GetAtt ArgoSecurityGroup.GroupId
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref VolumeSizeGb
+            VolumeType: gp3
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: argo-agent
+      # UserData runs the same steps as deploy/cloud/cloud-init.yaml:
+      # install Docker, clone the repo, and `docker compose up -d`.
+      UserData:
+        Fn::Base64: !Sub |
+          #!/usr/bin/env bash
+          set -euo pipefail
+          exec > >(tee /var/log/argo-userdata.log) 2>&1
+
+          echo "[argo] Installing Docker Engine..."
+          apt-get update -y
+          apt-get install -y ca-certificates curl git
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+            -o /etc/apt/keyrings/docker.asc
+          chmod a+r /etc/apt/keyrings/docker.asc
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+            https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+            > /etc/apt/sources.list.d/docker.list
+          apt-get update -y
+          apt-get install -y docker-ce docker-ce-cli containerd.io \
+            docker-buildx-plugin docker-compose-plugin
+          systemctl enable --now docker
+
+          echo "[argo] Cloning the ARGO repository..."
+          git clone --depth 1 --branch "${ArgoRepoRef}" \
+            "${ArgoRepoUrl}" /opt/argo/ARGO
+
+          echo "[argo] Building and starting ARGO..."
+          cd /opt/argo/ARGO
+          docker compose up -d --build
+
+          echo "[argo] Done. API will be available on TCP port 8000."
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+Outputs:
+
+  InstanceId:
+    Description: EC2 instance ID.
+    Value: !Ref ArgoInstance
+
+  PublicIp:
+    Description: Public IPv4 address of the ARGO instance.
+    Value: !GetAtt ArgoInstance.PublicIp
+
+  HealthCheckUrl:
+    Description: ARGO HTTP API health endpoint (allow a few minutes for first boot).
+    Value: !Sub "http://${ArgoInstance.PublicIp}:8000/api/health"
+
+  SshCommand:
+    Description: SSH command to reach the instance.
+    Value: !Sub "ssh ubuntu@${ArgoInstance.PublicIp}"

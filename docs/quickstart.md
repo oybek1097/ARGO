@@ -99,4 +99,4 @@ instructions.
 - [Configuration](configuration.md) — switch providers, tune the agent loop.
 - [Channels](channels.md) — connect Slack, Email, IRC, Matrix and more.
 - [Tools](tools.md) — see what the agent can do.
-</content>
+- [Architecture](architecture.md) — how the pieces fit together.

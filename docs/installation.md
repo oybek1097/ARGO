@@ -1,5 +1,16 @@
 # Installation
 
+ARGO offers several install paths. Pick the one that matches your goal:
+
+| Path | Best for | Needs |
+|---|---|---|
+| [Try it — no install](#option-0-try-it-no-install) | A quick offline look at the agent loop | Python 3.11+, the repo |
+| [One-shot installer](#option-1-one-shot-installer-recommended) | A normal local install | Python 3.11+, optionally Cargo |
+| [Manual install](#option-2-manual-install) | Full control over each step | Python 3.11+, optionally Cargo |
+| [PyPI](#option-3-pypi) | Installing the brain as a package | Python 3.11+ |
+| [Docker Compose](#option-4-docker-compose) | A two-service local/server deployment | Docker |
+| [Helm / Kubernetes](#option-5-helm-kubernetes) | A cluster deployment | A Kubernetes cluster, Helm |
+
 ## Requirements
 
 - **Python 3.11 or newer** — required for the `argo-brain` Python brain.
@@ -7,6 +18,21 @@
   gateway. If Cargo is absent, the brain still runs on its own.
 - No third-party Python packages are required: the brain runs on the standard
   library only.
+
+## Option 0 — try it, no install
+
+Because the brain is **stdlib-only**, you can run the full agent loop straight
+from a clone with no install step and no API key:
+
+```bash
+git clone https://github.com/oybek1097/ARGO.git
+cd ARGO/argo-brain
+python3 -m argo_brain chat
+```
+
+This uses the built-in `MockProvider`, which deterministically simulates the
+agent loop offline. It is the fastest way to see ARGO work. When you are ready
+for a real install, continue with one of the options below.
 
 ## Option 1 — one-shot installer (recommended)
 
@@ -53,6 +79,44 @@ cargo build --release
 # binary: argo-core/target/release/argo-core  (~1.3 MB)
 ```
 
+## Option 3 — PyPI
+
+A published PyPI package (`pip install argo-brain`) is planned for the GA
+release so the brain can be installed as a standalone package and invoked as
+`argo` / `python3 -m argo_brain` from anywhere.
+
+> **Roadmap.** PyPI publication is not yet available. Until then, install from
+> a clone with Option 0, 1 or 2. The brain has no third-party dependencies, so
+> the only practical difference a PyPI release adds is the convenience of not
+> cloning the repository.
+
+## Option 4 — Docker Compose
+
+The repository ships a `docker-compose.yml` at its root that runs both
+services (argo-core and argo-brain) with shared volumes for the IPC socket and
+persistent data:
+
+```bash
+git clone https://github.com/oybek1097/ARGO.git
+cd ARGO
+docker compose up -d --build
+curl http://localhost:8000/api/health
+```
+
+See [Deployment](deployment.md) and [`../DEPLOYMENT.md`](../DEPLOYMENT.md) for
+the full Compose reference.
+
+## Option 5 — Helm / Kubernetes
+
+A Helm chart lives in `helm/argo-agent/`. It deploys argo-core and argo-brain
+as two containers in one pod, sharing an `emptyDir` volume for the IPC socket:
+
+```bash
+helm install argo ./helm/argo-agent
+```
+
+See [Deployment](deployment.md) for chart values and overrides.
+
 ## The `~/.argo` directory layout
 
 Both the installer and the setup wizard create a per-user data directory.
@@ -98,4 +162,5 @@ container and Kubernetes deployment.
 - [Quickstart](quickstart.md) — run ARGO for the first time.
 - [Configuration](configuration.md) — tune `~/.argo/config.json` and the
   environment variables.
-</content>
+- [Deployment](deployment.md) — Docker Compose and Helm in detail.
+- [Troubleshooting](troubleshooting.md) — fixes if the install misbehaves.

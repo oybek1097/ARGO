@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download &amp; Install — ARGO Agent v3.0</title>
+  <meta name="description" content="Install ARGO Agent v3.0 — try it with the Python stdlib, or deploy with Docker, Helm, PyPI or a native build.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-text">ARGO<span class="brand-version">v3.0</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="index.html#features">Features</a></li>
+        <li><a href="index.html#architecture">Architecture</a></li>
+        <li><a href="index.html#quickstart">Quick start</a></li>
+        <li><a href="docs.html">Docs</a></li>
+        <li><a href="download.html">Download</a></li>
+        <li><a href="https://github.com/argo-agent/argo" class="nav-cta">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="page-hero">
+      <div class="container">
+        <p class="badge"><span class="badge-dot" aria-hidden="true"></span> Alpha — approaching GA</p>
+        <h1>Download &amp; install</h1>
+        <p>
+          Pick the option that fits your environment. The <code>argo-brain</code>
+          core runs on the Python standard library alone — so you can try ARGO
+          with nothing more than a Git clone.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Install options</h2>
+        <p class="section-lead">All options are self-hosted. ARGO never requires a hosted account to run.</p>
+
+        <div class="install-list">
+
+          <article class="install">
+            <div class="install-head">
+              <h3>Try it — no install</h3>
+              <span class="install-tag">Fastest</span>
+            </div>
+            <p>
+              Clone the repository and start chatting. <code>argo-brain</code>
+              uses only the Python 3 standard library, so there are no
+              dependencies to install.
+            </p>
+<pre><code>git clone https://github.com/argo-agent/argo.git
+cd argo/argo-brain
+python3 -m argo_brain chat      # interactive conversation, no API key
+python3 -m argo_brain doctor    # environment diagnostics</code></pre>
+          </article>
+
+          <article class="install">
+            <div class="install-head">
+              <h3>One-shot setup script</h3>
+              <span class="install-tag">Recommended</span>
+            </div>
+            <p>
+              The bundled installer checks your toolchain, builds the
+              <code>argo-core</code> Rust gateway and runs the configuration
+              wizard.
+            </p>
+<pre><code>git clone https://github.com/argo-agent/argo.git
+cd argo
+./scripts/setup.sh</code></pre>
+          </article>
+
+          <article class="install">
+            <div class="install-head">
+              <h3>Docker</h3>
+              <span class="install-tag tag-alpha">Alpha</span>
+            </div>
+            <p>
+              Run ARGO as a container — convenient for evaluation and
+              single-node deployments.
+            </p>
+<pre><code># build the image from the repository
+docker build -t argo-agent:latest .
+
+# run the gateway
+docker run -p 8080:8080 argo-agent:latest</code></pre>
+          </article>
+
+          <article class="install">
+            <div class="install-head">
+              <h3>Kubernetes (Helm)</h3>
+              <span class="install-tag tag-alpha">Alpha</span>
+            </div>
+            <p>
+              Deploy ARGO to a cluster with the Helm chart — suitable for
+              sovereign, self-managed installations.
+            </p>
+<pre><code>helm install argo ./deploy/helm/argo \
+  --namespace argo --create-namespace</code></pre>
+          </article>
+
+          <article class="install">
+            <div class="install-head">
+              <h3>PyPI package</h3>
+              <span class="install-tag tag-alpha">Planned for GA</span>
+            </div>
+            <p>
+              Once published, the brain will be installable directly from PyPI.
+              Until then, install from a local checkout of the repository.
+            </p>
+<pre><code># planned for the GA release
+pip install argo-brain
+
+# available today — install from source
+pip install ./argo-brain</code></pre>
+          </article>
+
+          <article class="install">
+            <div class="install-head">
+              <h3>Native build</h3>
+              <span class="install-tag">Best performance</span>
+            </div>
+            <p>
+              Build the <code>argo-core</code> Rust gateway from source for the
+              smallest footprint and fastest cold start.
+            </p>
+<pre><code>cd argo-core
+cargo build --release
+./target/release/argo-core</code></pre>
+          </article>
+
+        </div>
+
+        <div class="note-box">
+          <strong>Heads up:</strong> ARGO v3.0 is alpha software approaching
+          general availability. It is suitable for evaluation, development and
+          pilot deployments — please do not treat it as production-ready yet.
+          Container images, the Helm chart and the PyPI package are firming up
+          ahead of the GA launch. See the
+          <a href="docs.html">documentation</a> for full instructions.
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">System requirements</h2>
+        <p class="section-lead">ARGO is deliberately lightweight and runs comfortably on modest hardware.</p>
+        <div class="grid link-grid">
+          <div class="link-card">
+            <h3>argo-brain</h3>
+            <p>Python 3.9 or newer. Standard library only — no third-party packages required to run the core.</p>
+          </div>
+          <div class="link-card">
+            <h3>argo-core</h3>
+            <p>A recent Rust toolchain to build from source. The resulting binary is roughly 1.3&nbsp;MB and idles under 20&nbsp;MB of RAM.</p>
+          </div>
+          <div class="link-card">
+            <h3>Platforms</h3>
+            <p>Linux and macOS. Self-hosted on your own hardware, in your own cloud, or fully airgapped.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-text">ARGO<span class="brand-version">v3.0</span></span>
+        <p class="footer-tag">Open-source, multilingual AI agent platform.</p>
+      </div>
+      <nav class="footer-col" aria-label="Project">
+        <h4>Project</h4>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#architecture">Architecture</a>
+        <a href="download.html">Download</a>
+        <a href="docs.html">Documentation</a>
+      </nav>
+      <nav class="footer-col" aria-label="Community">
+        <h4>Community</h4>
+        <a href="https://github.com/argo-agent/argo">GitHub</a>
+        <a href="https://github.com/argo-agent/argo/issues">Issues</a>
+        <a href="https://github.com/argo-agent/argo/blob/main/CONTRIBUTING.md">Contributing</a>
+        <a href="https://github.com/argo-agent/argo/blob/main/LICENSE">MIT License</a>
+      </nav>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; <span id="footerYear">2026</span> ARGO Project. Released under the MIT License.</p>
+      <p>ARGO v3.0 is alpha software approaching general availability — not yet production-ready.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

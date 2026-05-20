@@ -63,4 +63,3 @@ cargo fmt --check
 
 By contributing you agree that your code is distributed under the MIT
 license. See the full [`CONTRIBUTING.md`](../CONTRIBUTING.md) for details.
-</content>

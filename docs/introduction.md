@@ -67,4 +67,4 @@ line-delimited JSON (one JSON object per line).
 - [Installation](installation.md) — get ARGO onto your machine.
 - [Quickstart](quickstart.md) — your first conversation.
 - [Architecture](architecture.md) — a deeper look at how the pieces fit.
-</content>
+- [FAQ](faq.md) — honest answers about project status and scope.

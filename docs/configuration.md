@@ -115,4 +115,3 @@ key:
 
 Their tools are then discovered and registered as `mcp_<server>_<tool>`.
 See [Tools](tools.md) and the [CLI reference](cli.md#mcp).
-</content>

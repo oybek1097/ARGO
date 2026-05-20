@@ -1,0 +1,85 @@
+# MkDocs configuration for the ARGO Agent v3.0 documentation site.
+#
+# Build / preview locally:
+#   pip install mkdocs mkdocs-material
+#   mkdocs serve            # live preview at http://127.0.0.1:8000
+#   mkdocs build            # static site into ./site
+#
+# This file lives in docs/ and treats docs/ itself as the docs root.
+
+site_name: ARGO Agent v3.0
+site_description: >-
+  An open-source, multilingual AI agent platform — a Rust gateway plus a
+  Python brain — optimized for Central Asian languages and DevOps.
+site_author: ARGO Agent contributors
+repo_url: https://github.com/oybek1097/ARGO
+repo_name: oybek1097/ARGO
+copyright: Distributed under the MIT license.
+
+# docs/ is both the location of this config and the docs source directory.
+docs_dir: .
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.details
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Introduction: introduction.md
+      - Installation: installation.md
+      - Quickstart: quickstart.md
+      - Configuration: configuration.md
+  - Understanding ARGO:
+      - Architecture: architecture.md
+      - Memory: memory.md
+      - Tools: tools.md
+      - Skills: skills.md
+      - Channels: channels.md
+      - Multi-agent: multi-agent.md
+      - Hub & Marketplace: hub.md
+  - Operating ARGO:
+      - Deployment: deployment.md
+      - Troubleshooting: troubleshooting.md
+      - FAQ: faq.md
+  - Reference:
+      - CLI reference: cli.md
+      - Contributing: contributing.md

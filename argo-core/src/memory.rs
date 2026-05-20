@@ -49,3 +49,64 @@ impl WorkingMemory {
             .unwrap_or_default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn push_then_history_returns_entries_in_order() {
+        let mem = WorkingMemory::new();
+        mem.push("alice", "user", "hello");
+        mem.push("alice", "assistant", "hi there");
+        mem.push("alice", "user", "how are you");
+
+        let history = mem.history("alice");
+        assert_eq!(history.len(), 3);
+        assert_eq!(history[0].role, "user");
+        assert_eq!(history[0].content, "hello");
+        assert_eq!(history[1].role, "assistant");
+        assert_eq!(history[1].content, "hi there");
+        assert_eq!(history[2].content, "how are you");
+    }
+
+    #[test]
+    fn history_for_unknown_user_is_empty() {
+        let mem = WorkingMemory::new();
+        assert!(mem.history("nobody").is_empty());
+    }
+
+    #[test]
+    fn ring_buffer_caps_at_max_per_user() {
+        let mem = WorkingMemory::new();
+        // Push more than the cap; oldest entries must be evicted.
+        for i in 0..(MAX_PER_USER + 50) {
+            mem.push("bob", "user", &format!("msg-{i}"));
+        }
+
+        let history = mem.history("bob");
+        assert_eq!(history.len(), MAX_PER_USER);
+        // The first 50 messages should have been evicted (msg-0..msg-49).
+        assert_eq!(history.first().unwrap().content, "msg-50");
+        assert_eq!(
+            history.last().unwrap().content,
+            format!("msg-{}", MAX_PER_USER + 49)
+        );
+    }
+
+    #[test]
+    fn users_are_isolated_from_each_other() {
+        let mem = WorkingMemory::new();
+        mem.push("u1", "user", "one");
+        mem.push("u2", "user", "two");
+        mem.push("u2", "user", "two-again");
+
+        let h1 = mem.history("u1");
+        let h2 = mem.history("u2");
+        assert_eq!(h1.len(), 1);
+        assert_eq!(h1[0].content, "one");
+        assert_eq!(h2.len(), 2);
+        assert_eq!(h2[0].content, "two");
+        assert_eq!(h2[1].content, "two-again");
+    }
+}

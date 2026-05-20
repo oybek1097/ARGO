@@ -228,6 +228,20 @@ pub async fn chat_completions(
     }
 }
 
+/// `GET /v1/models` — OpenAI-compatible model listing.
+///
+/// Returns the static set of model ids this gateway accepts. The ids are
+/// interchangeable; every request is ultimately dispatched to argo-brain.
+pub async fn models() -> Json<Value> {
+    Json(json!({
+        "object": "list",
+        "data": [
+            { "id": "argo", "object": "model", "owned_by": "argo" },
+            { "id": "argo-brain", "object": "model", "owned_by": "argo" },
+        ],
+    }))
+}
+
 /// `GET /metrics` — Prometheus text exposition (spec section 8).
 pub async fn metrics(State(state): State<Arc<AppState>>) -> String {
     let requests = state.chat_requests.load(Ordering::Relaxed);

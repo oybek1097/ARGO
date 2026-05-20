@@ -23,6 +23,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/ws/:uid", get(routes::ws))
         // OpenAI-compatible chat completions endpoint.
         .route("/v1/chat/completions", post(routes::chat_completions))
+        // OpenAI-compatible model listing endpoint.
+        .route("/v1/models", get(routes::models))
         .route("/metrics", get(routes::metrics))
         .with_state(state)
 }

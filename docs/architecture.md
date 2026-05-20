@@ -33,7 +33,7 @@ Its main subsystems live under `argo_brain/`:
 | Subsystem | Directory | Role |
 |---|---|---|
 | Agent loop | `core/` | The Plan → Execute loop (`AgentCore`). |
-| Memory | `memory/` | L0 working, L1 persistent, L2 vector memory. |
+| Memory | `memory/` | L0 working, L1 persistent, L2 vector, L3 knowledge graph. See [Memory](memory.md). |
 | Tools | `tools/` | The tool ABC, registry and built-in toolsets. |
 | Providers | `providers/` | LLM abstraction — Mock, Anthropic, OpenAI, Gemini, Ollama. |
 | Channels | `channels/` | Messaging-platform adapters. |
@@ -69,20 +69,13 @@ The brain's `AgentResponse` is serialized for IPC with these fields:
 `content`, `language`, `model`, `tools_used`, `iterations`, `duration_ms`
 and `error`.
 
-## The three-layer memory
+## The layered memory
 
-ARGO's memory is layered:
+ARGO's memory is layered — L0 working, L1 persistent, L2 vector and L3
+knowledge graph — and the `MemoryManager` in `argo_brain/memory/` orchestrates
+them (user profiles, history retrieval and persistence).
 
-- **L0 — working memory.** A per-user ring buffer (a `deque`) of recent turns.
-  In a full deployment this lives in `argo-core`; the brain also keeps an L0
-  buffer whose size is set by `working_memory_size` (default 200).
-- **L1 — persistent memory.** A SQLite database with an FTS5 full-text index.
-  Conversation history is stored here and is searchable.
-- **L2 — vector memory.** A vector store using a standard-library hashing
-  vectorizer and cosine-similarity search for semantic recall.
-
-The `MemoryManager` in `argo_brain/memory/` orchestrates these layers — user
-profiles, history retrieval and persistence.
+The [Memory](memory.md) page documents each layer in detail.
 
 ## The agent loop
 
@@ -112,4 +105,10 @@ If the loop reaches `max_iterations` without a final answer, ARGO returns a
 
 > The reflection queue, trajectory export and prompt cache are noted in the
 > code as planned for a later sprint.
-</content>
+
+## See also
+
+- [Memory](memory.md) — a deeper look at the L0–L3 memory layers.
+- [Tools](tools.md) — the tool system the agent loop drives.
+- [Multi-agent](multi-agent.md) — coordinating more than one agent run.
+- [Deployment](deployment.md) — running the two components in production.

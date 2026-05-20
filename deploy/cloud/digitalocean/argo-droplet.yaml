@@ -1,0 +1,66 @@
+#cloud-config
+# ---------------------------------------------------------------------------
+# ARGO Agent v3.0 — DigitalOcean Droplet cloud-config (user-data).
+#
+# Pass this file as the `--user-data-file` argument to `doctl compute
+# droplet create` (see this directory's README). DigitalOcean Droplets
+# run cloud-init, so this is the same bootstrap as the shared
+# deploy/cloud/cloud-init.yaml.
+#
+# On first boot it:
+#   1. Installs Docker Engine and the Docker Compose plugin.
+#   2. Clones the ARGO repository into /opt/argo/ARGO.
+#   3. Runs `docker compose up -d --build` to start argo-core + argo-brain.
+#
+# The HTTP API is then reachable on TCP port 8000.
+# First boot takes ~5-10 minutes (Docker install + Rust release build);
+# progress is logged to /var/log/cloud-init-output.log.
+# ---------------------------------------------------------------------------
+
+package_update: true
+
+packages:
+  - ca-certificates
+  - curl
+  - git
+
+write_files:
+  - path: /opt/argo/install.sh
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env bash
+      # Install Docker and start ARGO Agent. Idempotent: safe to re-run.
+      set -euo pipefail
+
+      ARGO_REPO="https://github.com/argo-agent/argo.git"
+      ARGO_REF="main"
+      ARGO_DIR="/opt/argo/ARGO"
+
+      echo "[argo] Installing Docker Engine..."
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+        -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+        https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+        > /etc/apt/sources.list.d/docker.list
+      apt-get update -y
+      apt-get install -y docker-ce docker-ce-cli containerd.io \
+        docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+
+      echo "[argo] Cloning the ARGO repository (${ARGO_REF})..."
+      git clone --depth 1 --branch "${ARGO_REF}" "${ARGO_REPO}" "${ARGO_DIR}"
+
+      echo "[argo] Building and starting the ARGO services..."
+      cd "${ARGO_DIR}"
+      docker compose up -d --build
+
+      echo "[argo] Done. API will be available on TCP port 8000."
+
+runcmd:
+  - [ bash, /opt/argo/install.sh ]
+
+final_message: "ARGO Agent cloud-init finished. Verify with: curl http://<droplet-ip>:8000/api/health"

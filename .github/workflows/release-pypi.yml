@@ -1,0 +1,98 @@
+# Release the `argo-brain` package to PyPI on a version tag.
+#
+# Triggered when a `v*` tag is pushed (e.g. `v3.0.0`). The workflow:
+#   1. build       — builds the sdist + wheel and runs `twine check`.
+#   2. testpypi    — publishes to TestPyPI as a dry-run gate.
+#   3. pypi        — publishes to real PyPI, only if `testpypi` succeeded.
+#
+# Publishing uses PyPI trusted publishing (OIDC) via `pypa/gh-action-pypi-publish`
+# — no API tokens are stored. See `release/pypi/RELEASING.md` for the one-time
+# pending-publisher setup on PyPI and TestPyPI, and for the GitHub `pypi` and
+# `testpypi` environment configuration.
+
+name: release-pypi
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Builds are read-only; publish jobs request the OIDC token explicitly.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade build twine
+
+      - name: Build distributions
+        # The package lives in the `argo-brain/` subdirectory.
+        working-directory: argo-brain
+        run: python -m build --sdist --wheel --outdir dist
+
+      - name: Validate distributions
+        working-directory: argo-brain
+        run: python -m twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: argo-brain/dist/
+
+  testpypi:
+    name: Publish to TestPyPI (dry-run gate)
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/argo-brain/
+    permissions:
+      # Required for trusted publishing (OIDC).
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          # TestPyPI may already hold a rehearsal upload of this version.
+          skip-existing: true
+
+  pypi:
+    name: Publish to PyPI
+    # Real publish is gated on a successful TestPyPI upload.
+    needs: testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/argo-brain/
+    permissions:
+      # Required for trusted publishing (OIDC).
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -88,4 +88,3 @@ Telegram channel is connected.
 
 - [CLI reference](cli.md) — the `telegram` and `serve` commands.
 - [Configuration](configuration.md) — channel credentials.
-</content>

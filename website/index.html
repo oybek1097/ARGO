@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARGO Agent v3.0 — Open-source multilingual AI agent platform</title>
+  <meta name="description" content="ARGO Agent v3.0 — an open-source, multilingual AI agent platform. Rust gateway plus Python brain, optimized for Central Asian languages and DevOps. Self-hosted, MIT licensed.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a href="index.html" class="brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-text">ARGO<span class="brand-version">v3.0</span></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#why">Why ARGO</a></li>
+        <li><a href="#quickstart">Quick start</a></li>
+        <li><a href="docs.html">Docs</a></li>
+        <li><a href="download.html">Download</a></li>
+        <li><a href="https://github.com/argo-agent/argo" class="nav-cta">GitHub</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <p class="badge"><span class="badge-dot" aria-hidden="true"></span> Alpha — approaching GA</p>
+        <h1 class="hero-title">The Central Asia native<br>AI agent platform.</h1>
+        <p class="hero-sub">
+          ARGO Agent is an open-source, multilingual AI agent platform — a hardened
+          <strong>Rust gateway</strong> paired with a rich <strong>Python brain</strong>.
+          Purpose-optimized for Central Asian languages, DevOps automation and
+          sovereign, self-hosted deployment.
+        </p>
+        <div class="hero-cta">
+          <a href="download.html" class="btn btn-primary">Get Started</a>
+          <a href="https://github.com/argo-agent/argo" class="btn btn-ghost">View on GitHub</a>
+        </div>
+        <p class="hero-meta">MIT licensed · Self-hosted first · Runs on the Python stdlib — no install needed to try it</p>
+      </div>
+    </section>
+
+    <!-- Stats strip -->
+    <section class="stats" aria-label="At a glance">
+      <div class="container stats-grid">
+        <div class="stat"><span class="stat-num">5</span><span class="stat-label">First-class Central Asian languages</span></div>
+        <div class="stat"><span class="stat-num">30+</span><span class="stat-label">Messaging channels planned</span></div>
+        <div class="stat"><span class="stat-num">120+</span><span class="stat-label">Built-in tools targeted</span></div>
+        <div class="stat"><span class="stat-num">&lt;20&nbsp;MB</span><span class="stat-label">Idle RAM for the Rust core</span></div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+      <div class="container">
+        <h2 class="section-title">What ARGO gives you</h2>
+        <p class="section-lead">A complete agent stack you run yourself — no vendor lock-in, no data leaving your infrastructure.</p>
+        <div class="grid features-grid">
+
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#9889;</div>
+            <h3>Rust gateway, Python brain</h3>
+            <p><code>argo-core</code> is a small, hardened Axum + Tokio gateway handling HTTP, IPC and metrics. <code>argo-brain</code> holds the agent loop, tools and memory.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#127760;</div>
+            <h3>Central Asian languages</h3>
+            <p>Native detection and response routing for Uzbek, Russian, Kazakh, Kyrgyz and Tajik — built in, not bolted on.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#128295;</div>
+            <h3>DevOps-first tooling</h3>
+            <p>Built-in tool groups for Git, Docker, Kubernetes, Terraform, Ansible, SSH and Vault — automation that speaks to your infrastructure.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#128172;</div>
+            <h3>30+ messaging channels</h3>
+            <p>Telegram, Slack, generic webhooks today; WhatsApp, Viber, LINE, Matrix, IRC and more on the roadmap.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#129520;</div>
+            <h3>Skills &amp; plugin marketplace</h3>
+            <p>Compose behavior from bundled skills, extend with a five-hook plugin API, and share through the ARGO hub.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon" aria-hidden="true">&#128274;</div>
+            <h3>Sovereign &amp; self-hosted</h3>
+            <p>Airgapped operation, layered memory (in-process, SQLite + FTS5, vector) and compliance modules — your data stays yours.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture" class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">How it fits together</h2>
+        <p class="section-lead">
+          A small, hardened external face delegates to a rich AI core over a
+          local Unix socket using line-delimited JSON.
+        </p>
+        <div class="arch">
+          <div class="arch-row">
+            <div class="arch-node">User</div>
+            <span class="arch-arrow" aria-hidden="true">&rarr;</span>
+            <div class="arch-node">Channel adapter</div>
+            <span class="arch-arrow" aria-hidden="true">&rarr;</span>
+            <div class="arch-node arch-node-core">
+              <strong>argo-core</strong>
+              <small>Rust · HTTP / WS gateway</small>
+            </div>
+            <span class="arch-arrow" aria-hidden="true">&rarr;</span>
+            <div class="arch-node arch-node-brain">
+              <strong>argo-brain</strong>
+              <small>Python · agent loop + tools</small>
+            </div>
+          </div>
+          <p class="arch-caption">
+            <code>argo-core</code> &mdash; the hardened external face: HTTP/WS,
+            IPC, L0 memory, Prometheus metrics. <code>argo-brain</code> &mdash;
+            the AI logic: Plan&rarr;Execute loop, tools, layered memory,
+            channels and plugins.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why ARGO -->
+    <section id="why" class="section">
+      <div class="container">
+        <h2 class="section-title">Why ARGO</h2>
+        <div class="grid why-grid">
+          <div class="why-col">
+            <h3>Sovereign deployment</h3>
+            <p>
+              ARGO is self-hosted first. Run it entirely inside your own
+              network — including fully airgapped, with no external internet
+              access. Layered memory and compliance-oriented modules keep data
+              residency under your control, which matters for governments,
+              banks and privacy-first teams.
+            </p>
+            <ul class="check-list">
+              <li>Self-hosted, MIT licensed — no usage metering, no lock-in</li>
+              <li>Airgapped mode for regulated environments</li>
+              <li>Bring your own LLM provider, or run a local model</li>
+            </ul>
+          </div>
+          <div class="why-col">
+            <h3>Central Asia focus</h3>
+            <p>
+              Most agent platforms treat Central Asian languages as an
+              afterthought. ARGO makes them first-class: tokenization,
+              language detection and response routing for Uzbek, Russian,
+              Kazakh, Kyrgyz and Tajik are part of the core — serving a
+              region of 250M+ people that is currently underserved.
+            </p>
+            <ul class="check-list">
+              <li>Native language detection across uz / ru / kk / ky / tg / en</li>
+              <li>Localized response routing out of the box</li>
+              <li>Built for CIS DevOps teams and regional startups</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick start -->
+    <section id="quickstart" class="section section-alt">
+      <div class="container">
+        <h2 class="section-title">Try it in under a minute</h2>
+        <p class="section-lead">
+          The <code>argo-brain</code> core runs on the Python standard library
+          alone — clone the repo and start chatting, no dependencies to install.
+        </p>
+        <div class="code-block">
+          <div class="code-head">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" id="copyBtn" type="button" aria-label="Copy code to clipboard">Copy</button>
+          </div>
+<pre id="codeSample"><code># clone the repository
+git clone https://github.com/argo-agent/argo.git
+cd argo
+
+# one-shot install (checks toolchain, builds argo-core, configures)
+./scripts/setup.sh
+
+# or just try the brain — no install required
+cd argo-brain
+python3 -m argo_brain chat      # interactive conversation, no API key
+python3 -m argo_brain doctor    # environment diagnostics
+python3 -m argo_brain serve     # start the HTTP gateway</code></pre>
+        </div>
+        <p class="section-note">
+          Prefer Docker, Helm or PyPI? See the <a href="download.html">download &amp; install</a> page.
+        </p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+      <div class="container cta-inner">
+        <h2>Build your own sovereign AI agent.</h2>
+        <p>Open source, MIT licensed, and ready to run on your own infrastructure today.</p>
+        <div class="hero-cta">
+          <a href="download.html" class="btn btn-primary">Get Started</a>
+          <a href="docs.html" class="btn btn-ghost">Read the Docs</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-text">ARGO<span class="brand-version">v3.0</span></span>
+        <p class="footer-tag">Open-source, multilingual AI agent platform.</p>
+      </div>
+      <nav class="footer-col" aria-label="Project">
+        <h4>Project</h4>
+        <a href="#features">Features</a>
+        <a href="#architecture">Architecture</a>
+        <a href="download.html">Download</a>
+        <a href="docs.html">Documentation</a>
+      </nav>
+      <nav class="footer-col" aria-label="Community">
+        <h4>Community</h4>
+        <a href="https://github.com/argo-agent/argo">GitHub</a>
+        <a href="https://github.com/argo-agent/argo/issues">Issues</a>
+        <a href="https://github.com/argo-agent/argo/blob/main/CONTRIBUTING.md">Contributing</a>
+        <a href="https://github.com/argo-agent/argo/blob/main/LICENSE">MIT License</a>
+      </nav>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2026 ARGO Project. Released under the MIT License.</p>
+      <p>ARGO v3.0 is alpha software approaching general availability — not yet production-ready.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

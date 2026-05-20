@@ -20,8 +20,13 @@ the project adheres to [Semantic Versioning](https://semver.org/).
   thin, audited CLI wrappers that fail cleanly if a CLI is absent
 - Data tools: sql_query, json_query, hash_text, base64, uuid, datetime
 - LLM providers: `MockProvider` (no key) + real `AnthropicProvider`,
-  `OpenAIProvider`, `GeminiProvider`, `OllamaProvider` and a generic
-  `OpenAICompatibleProvider` (DeepSeek/Groq/Mistral/OpenRouter/Together)
+  `OpenAIProvider`, `GeminiProvider`, `OllamaProvider`, a generic
+  `OpenAICompatibleProvider` (DeepSeek/Groq/Mistral/OpenRouter/Together),
+  and CIS-region `YandexGPTProvider` and `GigaChatProvider`
+- Observability: a Prometheus `MetricsCollector`, trace spans and a
+  structured JSON logger
+- Session/prompt cache: a fingerprinted per-user TTL cache
+- Built-in plugins: security audit, language enforcer, PII redactor
 - RL: a trajectory collector with ShareGPT / SFT / JSONL export
 - Compliance modules: UZ-152, RU-152-FZ, GDPR and CN-PIPL policy modules
 - Skills: an agentskills.io-compatible markdown loader with trigger matching
@@ -31,9 +36,9 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Cron: a scheduler with a natural-language schedule parser
 - Language detection: a uz/ru/kk/ky/tg/en heuristic
 - Channels: the `Channel` ABC plus Telegram, Email (IMAP/SMTP), IRC (TCP),
-  Matrix, Mattermost, Rocket.Chat, LINE, Viber, WhatsApp, Twilio SMS, a
-  generic webhook adapter and Slack (Events API); a `/webhook/<platform>`
-  route
+  Matrix, Mattermost, Rocket.Chat, LINE, Viber, WhatsApp, Twilio SMS,
+  Google Chat, Microsoft Teams, a generic webhook adapter and Slack
+  (Events API); a `/webhook/<platform>` route
 - Skills: an agentskills.io-compatible markdown loader and a curator
   (grading, duplicate detection, archive recommendations)
 - Hub & Marketplace: an `.argopkg` package format, HMAC-signed publishing,
@@ -47,12 +52,13 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
   `selftest`
-- 539 unit tests (stdlib `unittest`)
+- 651 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
-  `/api/history/:uid`, `/metrics`, a `/ws/:uid` WebSocket endpoint and an
-  OpenAI-compatible `/v1/chat/completions` endpoint
+  `/api/history/:uid`, `/metrics`, a `/ws/:uid` WebSocket endpoint and
+  OpenAI-compatible `/v1/chat/completions` and `/v1/models` endpoints
+- 8 Rust unit tests (memory ring buffer, config loading)
 - L0 working memory (DashMap, a per-user ring buffer)
 - A Unix-socket IPC client to argo-brain
 - Prometheus metrics

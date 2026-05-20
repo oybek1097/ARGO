@@ -14,6 +14,7 @@ from argo_brain.channels.base import (
     ChannelMessage,
 )
 from argo_brain.channels.email_channel import EmailChannel
+from argo_brain.channels.google_chat import GoogleChatChannel
 from argo_brain.channels.irc import IRCChannel
 from argo_brain.channels.line import LINEChannel
 from argo_brain.channels.matrix import MatrixChannel
@@ -21,6 +22,7 @@ from argo_brain.channels.mattermost import MattermostChannel
 from argo_brain.channels.rocketchat import RocketChatChannel
 from argo_brain.channels.runner import run_channel
 from argo_brain.channels.sms_twilio import TwilioSMSChannel
+from argo_brain.channels.teams import TeamsChannel
 from argo_brain.channels.viber import ViberChannel
 from argo_brain.channels.whatsapp import WhatsAppChannel
 from argo_brain.channels.telegram import TelegramChannel
@@ -38,12 +40,14 @@ __all__ = [
     "ChannelMessage",
     "EmailChannel",
     "GenericWebhookChannel",
+    "GoogleChatChannel",
     "IRCChannel",
     "LINEChannel",
     "MatrixChannel",
     "MattermostChannel",
     "RocketChatChannel",
     "SlackChannel",
+    "TeamsChannel",
     "TelegramChannel",
     "TwilioSMSChannel",
     "ViberChannel",

@@ -38,3 +38,74 @@ impl Config {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    /// `Config::from_env` reads process-wide env vars; this serialises the
+    /// tests that mutate them so they don't race each other.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    /// Clears every variable `Config::from_env` consults.
+    fn clear_env() {
+        for key in ["ARGO_HOME", "HOME", "ARGO_CORE_HOST", "ARGO_CORE_PORT", "ARGO_IPC_SOCKET"] {
+            std::env::remove_var(key);
+        }
+    }
+
+    #[test]
+    fn from_env_uses_defaults_when_unset() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_env();
+        std::env::set_var("HOME", "/tmp/argo-test-home");
+
+        let config = Config::from_env();
+        assert_eq!(config.host, "127.0.0.1");
+        assert_eq!(config.port, 8000);
+        assert_eq!(config.brain_socket, "/tmp/argo-test-home/.argo/argo.sock");
+        assert_eq!(config.version, env!("CARGO_PKG_VERSION"));
+    }
+
+    #[test]
+    fn from_env_applies_overrides() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_env();
+        std::env::set_var("ARGO_CORE_HOST", "0.0.0.0");
+        std::env::set_var("ARGO_CORE_PORT", "9999");
+        std::env::set_var("ARGO_IPC_SOCKET", "/run/argo/custom.sock");
+
+        let config = Config::from_env();
+        assert_eq!(config.host, "0.0.0.0");
+        assert_eq!(config.port, 9999);
+        assert_eq!(config.brain_socket, "/run/argo/custom.sock");
+
+        clear_env();
+    }
+
+    #[test]
+    fn from_env_argo_home_drives_socket_default() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_env();
+        std::env::set_var("ARGO_HOME", "/opt/argo");
+
+        let config = Config::from_env();
+        assert_eq!(config.brain_socket, "/opt/argo/argo.sock");
+
+        clear_env();
+    }
+
+    #[test]
+    fn from_env_ignores_invalid_port() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        clear_env();
+        std::env::set_var("ARGO_CORE_PORT", "not-a-number");
+
+        let config = Config::from_env();
+        // An unparseable port falls back to the default.
+        assert_eq!(config.port, 8000);
+
+        clear_env();
+    }
+}
