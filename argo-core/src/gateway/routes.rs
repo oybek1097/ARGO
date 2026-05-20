@@ -404,6 +404,174 @@ pub async fn embeddings(Json(body): Json<Value>) -> Json<Value> {
     }))
 }
 
+/// Builds a JSON-RPC 2.0 error object response.
+///
+/// `id` is echoed back from the request (JSON null if absent). `code` and
+/// `message` follow the JSON-RPC 2.0 spec error conventions.
+fn jsonrpc_error(id: Value, code: i64, message: &str) -> Value {
+    json!({
+        "jsonrpc": "2.0",
+        "id": id,
+        "error": { "code": code, "message": message },
+    })
+}
+
+/// Builds a JSON-RPC 2.0 success response.
+fn jsonrpc_result(id: Value, result: Value) -> Value {
+    json!({
+        "jsonrpc": "2.0",
+        "id": id,
+        "result": result,
+    })
+}
+
+/// Dispatches a single MCP JSON-RPC 2.0 request to its handler.
+///
+/// This is the pure, testable core of the `/mcp` endpoint: given a parsed
+/// JSON-RPC request `Value`, it returns the JSON-RPC response `Value`. It has
+/// no I/O and no dependency on application state, so it can be unit-tested
+/// directly.
+///
+/// Supported methods:
+/// - `initialize` — handshake; returns protocol version, capabilities, server info.
+/// - `tools/list` — argo-core owns no tools, so this returns an empty list.
+/// - `ping` — liveness check; returns an empty result object.
+///
+/// Any other method yields a JSON-RPC `-32601` (method not found) error.
+/// A request missing the `method` field yields `-32600` (invalid request).
+pub fn dispatch_mcp(request: &Value) -> Value {
+    // The id is echoed verbatim; absent ids become JSON null per the spec.
+    let id = request.get("id").cloned().unwrap_or(Value::Null);
+
+    let method = match request.get("method").and_then(Value::as_str) {
+        Some(method) => method,
+        None => return jsonrpc_error(id, -32600, "Invalid Request: missing method"),
+    };
+
+    match method {
+        "initialize" => jsonrpc_result(
+            id,
+            json!({
+                "protocolVersion": "2024-11-05",
+                "capabilities": { "tools": {} },
+                "serverInfo": { "name": "argo-core", "version": env!("CARGO_PKG_VERSION") },
+            }),
+        ),
+        "tools/list" => jsonrpc_result(id, json!({ "tools": [] })),
+        "ping" => jsonrpc_result(id, json!({})),
+        other => jsonrpc_error(id, -32601, &format!("Method not found: {other}")),
+    }
+}
+
+/// `POST /mcp` — minimal Model Context Protocol JSON-RPC 2.0 endpoint.
+///
+/// Accepts a JSON-RPC 2.0 request and dispatches it via [`dispatch_mcp`].
+/// argo-core itself owns no tools; this endpoint exists so MCP clients can
+/// complete the `initialize` handshake and discover the (empty) tool set.
+pub async fn mcp(Json(body): Json<Value>) -> Json<Value> {
+    Json(dispatch_mcp(&body))
+}
+
+/// Extracts the prompt text from a Responses-API `input` field.
+///
+/// The OpenAI Responses API allows `input` to be either a bare string or an
+/// array of message objects. This helper normalises both into a single string:
+/// for the array form it concatenates the text of every `input_text` content
+/// part across all messages. Anything unrecognised yields an empty string.
+pub fn extract_responses_input(input: &Value) -> String {
+    match input {
+        Value::String(s) => s.clone(),
+        Value::Array(messages) => {
+            let mut parts: Vec<String> = Vec::new();
+            for message in messages {
+                match message.get("content") {
+                    // content may itself be a plain string.
+                    Some(Value::String(s)) => parts.push(s.clone()),
+                    // ...or an array of typed content parts.
+                    Some(Value::Array(content)) => {
+                        for part in content {
+                            if let Some(text) = part.get("text").and_then(Value::as_str) {
+                                parts.push(text.to_string());
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            parts.join("\n")
+        }
+        _ => String::new(),
+    }
+}
+
+/// `POST /v1/responses` — OpenAI Responses API endpoint.
+///
+/// Accepts `{"model": ..., "input": ...}` where `input` is a string (or an
+/// array of Responses-API message objects). Forwards the extracted input text
+/// to argo-brain over IPC and returns an OpenAI Responses-shaped JSON object.
+pub async fn responses(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<Value>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    state.chat_requests.fetch_add(1, Ordering::Relaxed);
+
+    let model = body
+        .get("model")
+        .and_then(Value::as_str)
+        .unwrap_or("argo")
+        .to_string();
+
+    let message = body
+        .get("input")
+        .map(extract_responses_input)
+        .unwrap_or_default();
+
+    let user_id = "openai-responses";
+    state.memory.push(user_id, "user", &message);
+
+    let request = json!({
+        "action": "chat",
+        "id": Uuid::new_v4().to_string(),
+        "user_id": user_id,
+        "message": message,
+        "channel": "openai-responses",
+    });
+
+    match ipc::call(&state.config.brain_socket, &request).await {
+        Ok(response) => {
+            let content = response
+                .get("content")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+                .to_string();
+            state.memory.push(user_id, "assistant", &content);
+
+            Ok(Json(json!({
+                "id": format!("resp-{}", Uuid::new_v4()),
+                "object": "response",
+                "model": model,
+                "output": [{
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{
+                        "type": "output_text",
+                        "text": content,
+                    }],
+                }],
+                "status": "completed",
+            })))
+        }
+        Err(err) => {
+            state.chat_errors.fetch_add(1, Ordering::Relaxed);
+            tracing::warn!("responses dispatch failed: {err}");
+            Err((
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({ "error": err })),
+            ))
+        }
+    }
+}
+
 /// `GET /metrics` — Prometheus text exposition (spec section 8).
 pub async fn metrics(State(state): State<Arc<AppState>>) -> String {
     let requests = state.chat_requests.load(Ordering::Relaxed);
@@ -421,4 +589,119 @@ pub async fn metrics(State(state): State<Arc<AppState>>) -> String {
          # TYPE argo_uptime_seconds gauge\n\
          argo_uptime_seconds {uptime}\n"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn dispatch_mcp_initialize_returns_protocol_version() {
+        let request = json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+        });
+        let response = dispatch_mcp(&request);
+
+        assert_eq!(response["jsonrpc"], "2.0");
+        assert_eq!(response["id"], 1);
+        assert_eq!(response["result"]["protocolVersion"], "2024-11-05");
+        assert_eq!(response["result"]["serverInfo"]["name"], "argo-core");
+        // capabilities must be present so clients can negotiate.
+        assert!(response["result"]["capabilities"].is_object());
+        // No error branch on a known method.
+        assert!(response.get("error").is_none());
+    }
+
+    #[test]
+    fn dispatch_mcp_tools_list_returns_empty_list() {
+        let request = json!({
+            "jsonrpc": "2.0",
+            "id": "abc",
+            "method": "tools/list",
+        });
+        let response = dispatch_mcp(&request);
+
+        assert_eq!(response["id"], "abc");
+        let tools = response["result"]["tools"]
+            .as_array()
+            .expect("tools must be an array");
+        assert!(tools.is_empty());
+    }
+
+    #[test]
+    fn dispatch_mcp_ping_returns_empty_result() {
+        let request = json!({ "jsonrpc": "2.0", "id": 7, "method": "ping" });
+        let response = dispatch_mcp(&request);
+
+        assert_eq!(response["id"], 7);
+        assert!(response["result"].is_object());
+        assert!(response.get("error").is_none());
+    }
+
+    #[test]
+    fn dispatch_mcp_unknown_method_returns_method_not_found() {
+        let request = json!({
+            "jsonrpc": "2.0",
+            "id": 42,
+            "method": "does/not/exist",
+        });
+        let response = dispatch_mcp(&request);
+
+        assert_eq!(response["id"], 42);
+        assert_eq!(response["error"]["code"], -32601);
+        assert!(response.get("result").is_none());
+    }
+
+    #[test]
+    fn dispatch_mcp_missing_method_returns_invalid_request() {
+        let request = json!({ "jsonrpc": "2.0", "id": 9 });
+        let response = dispatch_mcp(&request);
+
+        assert_eq!(response["id"], 9);
+        assert_eq!(response["error"]["code"], -32600);
+    }
+
+    #[test]
+    fn dispatch_mcp_missing_id_echoes_null() {
+        let request = json!({ "jsonrpc": "2.0", "method": "ping" });
+        let response = dispatch_mcp(&request);
+
+        // Absent ids must be echoed back as JSON null.
+        assert!(response["id"].is_null());
+    }
+
+    #[test]
+    fn extract_responses_input_handles_plain_string() {
+        let input = json!("hello world");
+        assert_eq!(extract_responses_input(&input), "hello world");
+    }
+
+    #[test]
+    fn extract_responses_input_handles_message_array() {
+        let input = json!([
+            {
+                "role": "user",
+                "content": [
+                    { "type": "input_text", "text": "first" },
+                    { "type": "input_text", "text": "second" },
+                ],
+            },
+        ]);
+        assert_eq!(extract_responses_input(&input), "first\nsecond");
+    }
+
+    #[test]
+    fn extract_responses_input_handles_string_content() {
+        let input = json!([{ "role": "user", "content": "direct" }]);
+        assert_eq!(extract_responses_input(&input), "direct");
+    }
+
+    #[test]
+    fn extract_responses_input_unrecognised_yields_empty() {
+        assert_eq!(extract_responses_input(&json!(123)), "");
+        assert_eq!(extract_responses_input(&json!(null)), "");
+    }
 }

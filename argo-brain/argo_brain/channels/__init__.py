@@ -13,8 +13,10 @@ from argo_brain.channels.base import (
     ChannelHealth,
     ChannelMessage,
 )
+from argo_brain.channels.dingtalk import DingTalkChannel
 from argo_brain.channels.discord import DiscordChannel
 from argo_brain.channels.email_channel import EmailChannel
+from argo_brain.channels.feishu import FeishuChannel
 from argo_brain.channels.google_chat import GoogleChatChannel
 from argo_brain.channels.irc import IRCChannel
 from argo_brain.channels.line import LINEChannel
@@ -25,6 +27,7 @@ from argo_brain.channels.runner import run_channel
 from argo_brain.channels.sms_twilio import TwilioSMSChannel
 from argo_brain.channels.teams import TeamsChannel
 from argo_brain.channels.viber import ViberChannel
+from argo_brain.channels.wecom import WeComChannel
 from argo_brain.channels.whatsapp import WhatsAppChannel
 from argo_brain.channels.telegram import TelegramChannel
 from argo_brain.channels.webhook import (
@@ -39,8 +42,10 @@ __all__ = [
     "ChannelDirection",
     "ChannelHealth",
     "ChannelMessage",
+    "DingTalkChannel",
     "DiscordChannel",
     "EmailChannel",
+    "FeishuChannel",
     "GenericWebhookChannel",
     "GoogleChatChannel",
     "IRCChannel",
@@ -54,6 +59,7 @@ __all__ = [
     "TwilioSMSChannel",
     "ViberChannel",
     "WebhookChannel",
+    "WeComChannel",
     "WhatsAppChannel",
     "run_channel",
 ]

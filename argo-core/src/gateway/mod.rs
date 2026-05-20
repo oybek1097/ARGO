@@ -29,6 +29,10 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/models", get(routes::models))
         // OpenAI-compatible embeddings endpoint.
         .route("/v1/embeddings", post(routes::embeddings))
+        // OpenAI Responses API endpoint.
+        .route("/v1/responses", post(routes::responses))
+        // Model Context Protocol JSON-RPC 2.0 endpoint.
+        .route("/mcp", post(routes::mcp))
         .route("/metrics", get(routes::metrics))
         .with_state(state)
 }

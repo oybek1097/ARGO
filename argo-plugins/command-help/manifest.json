@@ -1,0 +1,13 @@
+{
+  "name": "command-help",
+  "version": "1.0.0",
+  "kind": "plugin",
+  "author": "argo-team",
+  "license": "MIT",
+  "description": "Adds a /help command listing available commands.",
+  "category": "plugin",
+  "triggers": [],
+  "requires": [],
+  "api_version": "3.0",
+  "format": 1
+}

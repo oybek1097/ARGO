@@ -11,11 +11,14 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 
+from argo_brain.cache.session import SessionCache, fingerprint
 from argo_brain.config import Settings
 from argo_brain.language import detect
 from argo_brain.memory import MemoryManager
+from argo_brain.observability.metrics import MetricsCollector
 from argo_brain.plugin import PluginRegistry
 from argo_brain.providers import LLMProvider, get_provider
+from argo_brain.rl.trajectory import TrajectoryCollector
 from argo_brain.skills import SkillLoader
 from argo_brain.tools import ToolRegistry, build_default_registry
 
@@ -74,6 +77,9 @@ class AgentCore:
         provider: LLMProvider | None = None,
         plugins: PluginRegistry | None = None,
         skills: SkillLoader | None = None,
+        metrics: MetricsCollector | None = None,
+        trajectories: TrajectoryCollector | None = None,
+        cache: SessionCache | None = None,
     ) -> None:
         self.settings = settings
         self.memory = memory or MemoryManager(
@@ -84,6 +90,11 @@ class AgentCore:
         self.provider = provider or get_provider(settings.model)
         self.plugins = plugins or PluginRegistry()
         self.skills = skills
+        # Optional observability / cache / RL subsystems. When left as None
+        # the agent loop behaves exactly as before (default fast path).
+        self.metrics = metrics
+        self.trajectories = trajectories
+        self.cache = cache
 
     def close(self) -> None:
         self.memory.close()
@@ -103,6 +114,10 @@ class AgentCore:
     async def process(self, req: AgentRequest) -> AgentResponse:
         """Fully processes a single request."""
         t0 = time.perf_counter()
+
+        # Observability: count every chat request received.
+        if self.metrics is not None:
+            self.metrics.counter("argo_chat_requests_total")
 
         # 1. Language detection + routing
         language = req.language or detect(req.message)
@@ -125,10 +140,22 @@ class AgentCore:
         )
         llm_msgs.append({"role": "user", "content": req.message})
 
+        # Prompt-cache: record a deterministic fingerprint of the request
+        # prefix. This never changes the response content — it only seeds the
+        # cache key so later sprints can wire in lookups safely.
+        if self.cache is not None:
+            try:
+                fp = fingerprint(llm_msgs, self.provider.model)
+                self.cache.set(req.user_id, fp, fp)
+            except Exception:
+                # The cache is best-effort: never let it break a request.
+                pass
+
         # 5. Plan -> Execute loop
         tools_used: list[str] = []
         final = ""
         iterations = 0
+        succeeded = False
         schemas = self.registry.schemas()
 
         for iterations in range(1, self.settings.max_iterations + 1):
@@ -169,6 +196,7 @@ class AgentCore:
                     )
             else:
                 final = resp.content
+                succeeded = True
                 break
         else:
             final = "The maximum number of iterations was exceeded."
@@ -186,7 +214,24 @@ class AgentCore:
         # 7. Plugin response hook
         await self.plugins.emit_response(req.user_id, final, self.provider.model)
 
-        # TODO(Sprint 8): reflection queue, trajectory export, prompt cache
+        duration_ms = int((time.perf_counter() - t0) * 1000)
+
+        # 8. Observability: record request latency in a histogram (seconds).
+        if self.metrics is not None:
+            self.metrics.histogram(
+                "argo_chat_duration_seconds", duration_ms / 1000.0
+            )
+
+        # 9. Trajectory export: record this interaction for RL / SFT use.
+        if self.trajectories is not None:
+            self.trajectories.record(
+                user_input=req.message,
+                output=final,
+                tools_used=tools_used,
+                model=self.provider.model,
+                success=succeeded,
+                duration_ms=duration_ms,
+            )
 
         return AgentResponse(
             content=final,
@@ -194,5 +239,5 @@ class AgentCore:
             model=self.provider.model,
             tools_used=tools_used,
             iterations=iterations,
-            duration_ms=int((time.perf_counter() - t0) * 1000),
+            duration_ms=duration_ms,
         )

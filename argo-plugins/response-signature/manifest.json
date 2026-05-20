@@ -1,0 +1,13 @@
+{
+  "name": "response-signature",
+  "version": "1.0.0",
+  "kind": "plugin",
+  "author": "argo-team",
+  "license": "MIT",
+  "description": "Adds an ARGO provenance footer to responses.",
+  "category": "plugin",
+  "triggers": [],
+  "requires": [],
+  "api_version": "3.0",
+  "format": 1
+}

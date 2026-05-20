@@ -1,0 +1,13 @@
+{
+  "name": "language-detector",
+  "version": "1.0.0",
+  "kind": "plugin",
+  "author": "argo-team",
+  "license": "MIT",
+  "description": "Detects the script of agent responses.",
+  "category": "plugin",
+  "triggers": [],
+  "requires": [],
+  "api_version": "3.0",
+  "format": 1
+}

@@ -1,0 +1,13 @@
+{
+  "name": "cost-tracker",
+  "version": "1.0.0",
+  "kind": "plugin",
+  "author": "argo-team",
+  "license": "MIT",
+  "description": "Tracks estimated LLM spend per user.",
+  "category": "plugin",
+  "triggers": [],
+  "requires": [],
+  "api_version": "3.0",
+  "format": 1
+}

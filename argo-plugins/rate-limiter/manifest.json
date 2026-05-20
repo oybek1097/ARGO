@@ -1,0 +1,13 @@
+{
+  "name": "rate-limiter",
+  "version": "1.0.0",
+  "kind": "plugin",
+  "author": "argo-team",
+  "license": "MIT",
+  "description": "Limits tool calls per user within a time window.",
+  "category": "plugin",
+  "triggers": [],
+  "requires": [],
+  "api_version": "3.0",
+  "format": 1
+}

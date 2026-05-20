@@ -11,9 +11,9 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Agent core: the Plan → Execute loop (spec section 4.2)
 - Memory: L0 working memory (deque) + L1 persistent (SQLite + FTS5) +
   L2 vector store (cosine-similarity search) + L3 knowledge graph
-- Tool system: the `Tool` ABC, a registry, and 58 built-in tools across the
-  basic, web, terminal, file, text, format, system, workflow, rag, memory,
-  devops and data toolsets
+- Tool system: the `Tool` ABC, a registry, and 68 built-in tools across the
+  basic, web, browser, media, terminal, file, text, format, system,
+  workflow, rag, memory, devops and data toolsets
 - RAG: document ingest / search / summarize tools over the L2 vector store
 - i18n: a 7-locale message catalogue (en/ru/uz/kk/ky/tg/tr) and Central
   Asian language-pack metadata
@@ -47,8 +47,12 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Channels: the `Channel` ABC plus Telegram, Email (IMAP/SMTP), IRC (TCP),
   Matrix, Mattermost, Rocket.Chat, LINE, Viber, WhatsApp, Twilio SMS,
   Google Chat, Microsoft Teams, Discord (with a stdlib WebSocket client),
-  a generic webhook adapter and Slack (Events API); a `/webhook/<platform>`
-  route
+  Feishu, DingTalk, WeCom, a generic webhook adapter and Slack (Events
+  API); a `/webhook/<platform>` route
+- Agent loop wired to optional observability metrics, a trajectory
+  collector and the session cache
+- Skill taps: pluggable skill sources (local, bundled, git) with
+  priority-based merging
 - Skills: an agentskills.io-compatible markdown loader and a curator
   (grading, duplicate detection, archive recommendations)
 - Hub & Marketplace: an `.argopkg` package format, HMAC-signed publishing,
@@ -62,13 +66,14 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `tui`, `serve`, `ipc`, `telegram`, `mcp`,
   `selftest`
-- 950 unit tests (stdlib `unittest`), including end-to-end and smoke suites
+- 1043 unit tests (stdlib `unittest`), including end-to-end and smoke suites
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
   `/api/chat/stream` (SSE), `/api/history/:uid`, `/metrics`, a `/ws/:uid`
-  WebSocket endpoint and OpenAI-compatible `/v1/chat/completions`,
-  `/v1/models` and `/v1/embeddings` endpoints
+  WebSocket endpoint, OpenAI-compatible `/v1/chat/completions`,
+  `/v1/models`, `/v1/embeddings` and `/v1/responses` endpoints, and an
+  MCP JSON-RPC endpoint `/mcp`
 - A per-IP rate limiter guarding the chat endpoints
 - An OpenAPI 3.1 spec generator (served at `/openapi.json`)
 - 12 Rust unit tests (memory ring buffer, config loading, rate limiter)
