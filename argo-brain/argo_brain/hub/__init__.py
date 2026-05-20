@@ -6,6 +6,8 @@ mirror unchanged, and a client that verifies every package before install.
 """
 
 from argo_brain.hub.client import HubClient, HubError, InstallResult
+from argo_brain.hub.remote import RemoteRegistry
+from argo_brain.hub.server import HubServer
 from argo_brain.hub.package import (
     KIND_PLUGIN,
     KIND_SKILL,
@@ -41,4 +43,6 @@ __all__ = [
     "HubClient",
     "HubError",
     "InstallResult",
+    "HubServer",
+    "RemoteRegistry",
 ]

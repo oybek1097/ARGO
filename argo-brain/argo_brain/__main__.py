@@ -4,6 +4,10 @@ Commands:
   chat      Interactive conversation (Mock provider, no API key needed)
   serve     Run the HTTP API gateway
   ipc       Run the IPC server (Unix socket)
+  tools     List all built-in tools
+  channels  List available channel adapters
+  skills    List discovered skills
+  config    Print the resolved configuration
   selftest  Self-check (smoke test)
   version   Version information
 """
@@ -251,6 +255,45 @@ def _cmd_setup() -> int:
     return 0
 
 
+def _cmd_tools() -> int:
+    """Lists all built-in tools from the default registry."""
+    from argo_brain.cli import list_tools_text
+
+    print(f"ARGO brain v{__version__}")
+    print(list_tools_text())
+    return 0
+
+
+def _cmd_channels() -> int:
+    """Lists the available channel adapters."""
+    from argo_brain.cli import list_channels_text
+
+    print(f"ARGO brain v{__version__}")
+    print(list_channels_text())
+    return 0
+
+
+def _cmd_skills() -> int:
+    """Lists the discovered skills from the skills directory."""
+    from argo_brain.cli import list_skills_text
+
+    settings = load_settings()
+    skills_dir = settings.resolved_data_dir.parent / "skills"
+    print(f"ARGO brain v{__version__}")
+    print(list_skills_text(skills_dir))
+    return 0
+
+
+def _cmd_config() -> int:
+    """Prints the resolved configuration."""
+    from argo_brain.cli import config_text
+
+    settings = load_settings()
+    print(f"ARGO brain v{__version__}")
+    print(config_text(settings))
+    return 0
+
+
 def _cmd_doctor() -> int:
     """Diagnoses the installation — spec section 4.2 (`argo doctor`)."""
     import os
@@ -357,6 +400,15 @@ async def _cmd_selftest() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
+    # `hub` has its own rich sub-CLI; hand everything after it straight to the
+    # hub parser so its options (e.g. --registry) are not seen by this parser.
+    if argv and argv[0] == "hub":
+        from argo_brain.hub.cli import run as _hub_run
+
+        return _hub_run(argv[1:])
+
     parser = argparse.ArgumentParser(
         prog="argo-brain", description="ARGO Agent v3.0 — Python brain"
     )
@@ -371,8 +423,13 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("ipc", help="run the IPC server")
     sub.add_parser("telegram", help="run the Telegram channel")
     sub.add_parser("mcp", help="list tools from configured MCP servers")
+    sub.add_parser("tools", help="list all built-in tools")
+    sub.add_parser("channels", help="list available channel adapters")
+    sub.add_parser("skills", help="list discovered skills")
+    sub.add_parser("config", help="print the resolved configuration")
     sub.add_parser("selftest", help="self-check")
     sub.add_parser("version", help="version information")
+    sub.add_parser("hub", help="skill & plugin marketplace (see: argo hub --help)")
 
     args = parser.parse_args(argv)
     cmd = args.command or "chat"
@@ -394,6 +451,14 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_cmd_telegram())
     if cmd == "mcp":
         return asyncio.run(_cmd_mcp())
+    if cmd == "tools":
+        return _cmd_tools()
+    if cmd == "channels":
+        return _cmd_channels()
+    if cmd == "skills":
+        return _cmd_skills()
+    if cmd == "config":
+        return _cmd_config()
     if cmd == "serve":
         return _cmd_serve(args.host, args.port)
     if cmd == "selftest":
