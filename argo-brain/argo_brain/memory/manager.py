@@ -1,8 +1,8 @@
-"""Memory manager — unifies L0 + L1 under a single API.
+"""Memory manager — unifies L0 + L1 + L2 under a single API.
 
 Spec section 4.3: `MemoryManager` is a single interface over L0 (working),
-L1 (persistent) and L2 (vector). At the skeleton stage only L0 + L1 are
-present. L2 (ChromaDB/Qdrant) will be added in Sprint 2 as `vector.py`.
+L1 (persistent) and L2 (vector). L2 uses the stdlib-only `VectorMemory`
+(a hashing vectorizer); it can later be swapped for ChromaDB/Qdrant.
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from argo_brain.memory.persistent import PersistentMemory
+from argo_brain.memory.vector import VectorMemory
 from argo_brain.memory.working import WorkingMemory
 
 
@@ -38,6 +39,7 @@ class MemoryManager:
     def __init__(self, db_path: Path | str, working_size: int = 200) -> None:
         self.working = WorkingMemory(maxlen=working_size)
         self.persistent = PersistentMemory(db_path)
+        self.vector = VectorMemory()
 
     def close(self) -> None:
         self.persistent.close()
@@ -52,12 +54,13 @@ class MemoryManager:
         channel: str = "unknown",
         session_id: str | None = None,
     ) -> None:
-        """Writes a message to L0 and L1 at the same time."""
+        """Writes a message to L0, L1 and the L2 vector store at once."""
         self.working.add(user_id, role, content, language=language, channel=channel)
         await self.persistent.add(
             user_id, role, content,
             language=language, channel=channel, session_id=session_id,
         )
+        self.vector.add(user_id, content, metadata={"role": role})
 
     async def history(self, user_id: str, limit: int = 20) -> list[dict]:
         """History: L0 first (fast), falling back to L1 if empty."""
@@ -69,6 +72,10 @@ class MemoryManager:
     async def search(self, user_id: str, query: str, limit: int = 10) -> list[dict]:
         """Non-semantic full-text search via L1 FTS5."""
         return await self.persistent.search(user_id, query, limit)
+
+    def semantic_search(self, user_id: str, query: str, k: int = 5) -> list[dict]:
+        """Semantic (cosine-similarity) search via the L2 vector store."""
+        return self.vector.search(user_id, query, k)
 
     async def profile(self, user_id: str) -> dict | None:
         return await self.persistent.profile(user_id)
