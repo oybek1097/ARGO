@@ -29,12 +29,31 @@ def _build_agent(settings: Settings):
     return AgentCore(settings, skills=loader)
 
 
+async def _attach_mcp(agent) -> list:
+    """Connects configured MCP servers and registers their tools.
+
+    Returns the live MCP clients so the caller can stop them on exit.
+    """
+    from argo_brain.mcp import load_mcp_servers, read_mcp_config
+
+    servers = read_mcp_config()
+    if not servers:
+        return []
+    clients, tools = await load_mcp_servers(servers)
+    for tool in tools:
+        agent.registry.register(tool)
+    if tools:
+        print(f"MCP: connected {len(tools)} tool(s) from {len(clients)} server(s)")
+    return clients
+
+
 async def _cmd_chat() -> int:
     from argo_brain.core import AgentRequest
 
     settings = load_settings()
     settings.ensure_dirs()
     agent = _build_agent(settings)
+    mcp_clients = await _attach_mcp(agent)
     print(f"ARGO brain v{__version__} — interactive chat (exit: /exit)")
     print(f"Provider: {agent.provider.model}\n")
     try:
@@ -56,7 +75,29 @@ async def _cmd_chat() -> int:
                 f"{resp.duration_ms}ms{tag})\n"
             )
     finally:
+        for client in mcp_clients:
+            await client.stop()
         agent.close()
+    return 0
+
+
+async def _cmd_mcp() -> int:
+    """Connects configured MCP servers and lists their discovered tools."""
+    from argo_brain.mcp import load_mcp_servers, read_mcp_config
+
+    servers = read_mcp_config()
+    if not servers:
+        print("No MCP servers configured in ~/.argo/config.json")
+        print('Add: {"mcp": {"servers": [{"name": "...", "command": "..."}]}}')
+        return 0
+
+    clients, tools = await load_mcp_servers(servers)
+    print(f"ARGO brain v{__version__} — MCP")
+    print(f"{len(clients)} server(s), {len(tools)} tool(s):\n")
+    for tool in tools:
+        print(f"  {tool.name:32s} {tool.description}")
+    for client in clients:
+        await client.stop()
     return 0
 
 
@@ -314,6 +355,7 @@ def main(argv: list[str] | None = None) -> int:
     serve_p.add_argument("--port", type=int, default=8000)
     sub.add_parser("ipc", help="run the IPC server")
     sub.add_parser("telegram", help="run the Telegram channel")
+    sub.add_parser("mcp", help="list tools from configured MCP servers")
     sub.add_parser("selftest", help="self-check")
     sub.add_parser("version", help="version information")
 
@@ -333,6 +375,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_cmd_ipc())
     if cmd == "telegram":
         return asyncio.run(_cmd_telegram())
+    if cmd == "mcp":
+        return asyncio.run(_cmd_mcp())
     if cmd == "serve":
         return _cmd_serve(args.host, args.port)
     if cmd == "selftest":

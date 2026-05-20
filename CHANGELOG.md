@@ -21,9 +21,11 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - Language detection: a uz/ru/kk/ky/tg/en heuristic
 - Channels: the `Channel` ABC plus Telegram (long polling), a generic
   webhook adapter and Slack (Events API); a `/webhook/<platform>` route
+- MCP client: connects to external MCP servers over stdio (newline-delimited
+  JSON-RPC 2.0) and exposes their tools as `mcp_<server>_<tool>`
 - HTTP gateway and IPC server (Unix socket)
-- CLI: `setup`, `doctor`, `chat`, `serve`, `ipc`, `telegram`, `selftest`
-- 84 unit tests (stdlib `unittest`)
+- CLI: `setup`, `doctor`, `chat`, `serve`, `ipc`, `telegram`, `mcp`, `selftest`
+- 92 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
