@@ -19,17 +19,21 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 - LLM providers: `MockProvider` (no key) + a real `AnthropicProvider`
 - Skills: an agentskills.io-compatible markdown loader with trigger matching
 - Plugin system: a 5-hook API and registry (pre/post tool, on_response)
-- Multi-agent: a durable SQLite Kanban board (claim/complete/retry/block)
+- Multi-agent: a durable SQLite Kanban board (claim/complete/retry/block),
+  task delegation, mixture-of-agents and a DAG workflow runner
 - Cron: a scheduler with a natural-language schedule parser
 - Language detection: a uz/ru/kk/ky/tg/en heuristic
 - Channels: the `Channel` ABC plus Telegram (long polling), Email
-  (IMAP/SMTP), a generic webhook adapter and Slack (Events API); a
-  `/webhook/<platform>` route
-- MCP client: connects to external MCP servers over stdio (newline-delimited
-  JSON-RPC 2.0) and exposes their tools as `mcp_<server>_<tool>`
+  (IMAP/SMTP), IRC (TCP), a generic webhook adapter and Slack (Events API);
+  a `/webhook/<platform>` route
+- MCP client + server: connects to external MCP servers over stdio
+  (newline-delimited JSON-RPC 2.0) exposing their tools as
+  `mcp_<server>_<tool>`, and exposes ARGO's own tools as an MCP server
+- Security: PII redaction pipeline (email/phone/card/IP/IBAN) and an
+  append-only SQLite audit log
 - HTTP gateway and IPC server (Unix socket)
 - CLI: `setup`, `doctor`, `chat`, `serve`, `ipc`, `telegram`, `mcp`, `selftest`
-- 156 unit tests (stdlib `unittest`)
+- 210 unit tests (stdlib `unittest`)
 
 ### Added — argo-core (Rust gateway)
 - An Axum + Tokio HTTP gateway: `/api/health`, `/api/version`, `/api/chat`,
