@@ -10,9 +10,11 @@ the project adheres to [Semantic Versioning](https://semver.org/).
 ### Added — argo-brain (Python brain)
 - Agent core: the Plan → Execute loop (spec section 4.2)
 - Memory: L0 working memory (deque) + L1 persistent (SQLite + FTS5)
-- Tool system: the `Tool` ABC, a registry, and 13 built-in tools
-  (current_time, calculate, read/write/find/grep file, http_get/post,
-  web_fetch, shell_exec, list_dir, memory_search/remember)
+- Tool system: the `Tool` ABC, a registry, and 21 built-in tools across the
+  basic, web, terminal, file, memory and devops toolsets
+- DevOps tools: Git (status/log/diff/branch/commit), Docker (ps/images)
+  and kubectl — thin, audited CLI wrappers that fail cleanly if a CLI is
+  absent
 - LLM providers: `MockProvider` (no key) + a real `AnthropicProvider`
 - Skills: an agentskills.io-compatible markdown loader with trigger matching
 - Plugin system: a 5-hook API and registry (pre/post tool, on_response)

@@ -61,9 +61,10 @@ def build_default_registry(memory=None) -> ToolRegistry:
     """Creates a registry populated with the built-in tools.
 
     If `memory` is provided, memory-dependent tools are added as well.
-    Covers the `basic`, `web`, `terminal`, `file` and `memory` toolsets.
+    Covers the `basic`, `web`, `terminal`, `file`, `devops` and `memory`
+    toolsets.
     """
-    from argo_brain.tools.builtin import basic, files, terminal, web
+    from argo_brain.tools.builtin import basic, devops, files, terminal, web
 
     registry = ToolRegistry()
     for tool in basic.builtin_tools(memory=memory):
@@ -73,6 +74,8 @@ def build_default_registry(memory=None) -> ToolRegistry:
     for tool in terminal.terminal_tools():
         registry.register(tool)
     for tool in files.file_tools():
+        registry.register(tool)
+    for tool in devops.devops_tools():
         registry.register(tool)
     if memory is not None:
         from argo_brain.tools.builtin import memory_tools
