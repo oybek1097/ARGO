@@ -42,7 +42,7 @@ class ShellExecTool(Tool):
         normalized = " ".join(command.split())
         if any(bad in normalized for bad in _BLOCKED):
             return ToolResult(
-                content="Bloklangan buyruq: xavfli amaliyot.", success=False
+                content="Blocked command: dangerous operation.", success=False
             )
 
         try:
@@ -53,7 +53,7 @@ class ShellExecTool(Tool):
                 cwd=cwd,
             )
         except OSError as exc:
-            return ToolResult(content=f"Bajarib boʻlmadi: {exc}", success=False)
+            return ToolResult(content=f"Could not execute: {exc}", success=False)
 
         try:
             stdout, stderr = await asyncio.wait_for(
@@ -62,7 +62,7 @@ class ShellExecTool(Tool):
         except asyncio.TimeoutError:
             proc.kill()
             await proc.wait()
-            return ToolResult(content="Buyruq vaqti tugadi (timeout).", success=False)
+            return ToolResult(content="Command timed out (timeout).", success=False)
 
         out = stdout.decode("utf-8", errors="replace")[:_MAX_OUTPUT]
         err = stderr.decode("utf-8", errors="replace")[:_MAX_OUTPUT]
@@ -70,7 +70,7 @@ class ShellExecTool(Tool):
         if err:
             body += f"\n[stderr]\n{err}"
         return ToolResult(
-            content=body.strip() or "(boʻsh chiqish)",
+            content=body.strip() or "(empty output)",
             success=proc.returncode == 0,
             metadata={"exit_code": proc.returncode},
         )

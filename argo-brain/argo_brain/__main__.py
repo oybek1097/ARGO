@@ -35,12 +35,12 @@ async def _cmd_chat() -> int:
     settings = load_settings()
     settings.ensure_dirs()
     agent = _build_agent(settings)
-    print(f"ARGO brain v{__version__} — interaktiv chat (chiqish: /exit)")
-    print(f"Provayder: {agent.provider.model}\n")
+    print(f"ARGO brain v{__version__} — interactive chat (exit: /exit)")
+    print(f"Provider: {agent.provider.model}\n")
     try:
         while True:
             try:
-                line = input("siz> ").strip()
+                line = input("you> ").strip()
             except (EOFError, KeyboardInterrupt):
                 print()
                 break
@@ -67,7 +67,7 @@ async def _cmd_ipc() -> int:
     settings.ensure_dirs()
     server = IPCServer(settings, agent=_build_agent(settings))
     print(f"ARGO brain v{__version__} — IPC server")
-    print(f"Socket: {settings.resolved_ipc_socket}  (to'xtatish: Ctrl+C)")
+    print(f"Socket: {settings.resolved_ipc_socket}  (stop: Ctrl+C)")
     try:
         await server.serve_forever()
     except KeyboardInterrupt:
@@ -101,8 +101,8 @@ def _cmd_serve(host: str, port: int) -> int:
         agent=_build_agent(settings), webhooks=webhooks,
     )
     print(f"ARGO brain v{__version__} — HTTP gateway")
-    print(f"Manzil: http://{host}:{port}  (to'xtatish: Ctrl+C)")
-    print(f"Webhook platformalar: {', '.join(webhooks)}")
+    print(f"Address: http://{host}:{port}  (stop: Ctrl+C)")
+    print(f"Webhook platforms: {', '.join(webhooks)}")
     try:
         gateway.serve_forever()
     except KeyboardInterrupt:
@@ -118,16 +118,16 @@ async def _cmd_telegram() -> int:
 
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     if not token:
-        print("Xato: TELEGRAM_BOT_TOKEN muhit oʻzgaruvchisi oʻrnatilmagan.")
-        print("Telegram'da @BotFather orqali bot yarating, soʻngra:")
+        print("Error: the TELEGRAM_BOT_TOKEN environment variable is not set.")
+        print("Create a bot via @BotFather on Telegram, then run:")
         print("  export TELEGRAM_BOT_TOKEN=<token>")
         return 1
 
     settings = load_settings()
     settings.ensure_dirs()
     agent = _build_agent(settings)
-    print(f"ARGO brain v{__version__} — Telegram kanali")
-    print(f"Provayder: {agent.provider.model}  (to'xtatish: Ctrl+C)")
+    print(f"ARGO brain v{__version__} — Telegram channel")
+    print(f"Provider: {agent.provider.model}  (stop: Ctrl+C)")
     try:
         await run_channel(TelegramChannel(token), agent)
     except KeyboardInterrupt:
@@ -144,7 +144,7 @@ def _cmd_setup() -> int:
     from pathlib import Path
 
     home = Path(os.environ.get("ARGO_HOME", Path.home() / ".argo"))
-    print(f"ARGO Agent v{__version__} — sozlash sehrgari\n")
+    print(f"ARGO Agent v{__version__} — setup wizard\n")
 
     def ask(prompt: str, default: str) -> str:
         try:
@@ -153,11 +153,11 @@ def _cmd_setup() -> int:
             answer = ""
         return answer or default
 
-    print("LLM modelni tanlang:")
-    print("  1) mock              — API kalitsiz (sinov uchun)")
-    print("  2) claude-sonnet-4-6 — Anthropic (kalit kerak)")
-    print("  3) claude-opus-4-7   — Anthropic (kalit kerak)")
-    choice = ask("Tanlov", "1")
+    print("Choose an LLM model:")
+    print("  1) mock              — no API key (for testing)")
+    print("  2) claude-sonnet-4-6 — Anthropic (key required)")
+    print("  3) claude-opus-4-7   — Anthropic (key required)")
+    choice = ask("Choice", "1")
     model = {"1": "mock", "2": "claude-sonnet-4-6", "3": "claude-opus-4-7"}.get(
         choice, choice
     )
@@ -166,7 +166,7 @@ def _cmd_setup() -> int:
     if model != "mock":
         api_key = ask("ANTHROPIC_API_KEY", "")
 
-    port = ask("HTTP gateway porti", "8000")
+    port = ask("HTTP gateway port", "8000")
 
     # Create the standard directory layout.
     home.mkdir(parents=True, exist_ok=True)
@@ -186,13 +186,13 @@ def _cmd_setup() -> int:
         )
         env_file.chmod(0o600)
 
-    print(f"\nTayyor. Konfiguratsiya: {home / 'config.json'}")
-    print("Keyingi qadamlar:")
+    print(f"\nDone. Configuration: {home / 'config.json'}")
+    print("Next steps:")
     if api_key:
         print(f"  source {home / 'env'}")
     print("  python3 -m argo_brain ipc      # brain (IPC)")
     print("  python3 -m argo_brain serve    # HTTP gateway")
-    print("  python3 -m argo_brain doctor   # tekshiruv")
+    print("  python3 -m argo_brain doctor   # diagnostics")
     return 0
 
 
@@ -210,14 +210,14 @@ def _cmd_doctor() -> int:
     checks.append(("Python >= 3.11", py_ok, _sys.version.split()[0]))
 
     cfg = home / "config.json"
-    checks.append(("Konfiguratsiya fayli", cfg.is_file(), str(cfg)))
+    checks.append(("Configuration file", cfg.is_file(), str(cfg)))
 
     checks.append(
-        ("Ma'lumotlar katalogi", (home / "data").is_dir(), str(home / "data"))
+        ("Data directory", (home / "data").is_dir(), str(home / "data"))
     )
 
     key_set = bool(os.environ.get("ANTHROPIC_API_KEY"))
-    checks.append(("ANTHROPIC_API_KEY", key_set, "o'rnatilgan" if key_set else "yo'q (mock rejim)"))
+    checks.append(("ANTHROPIC_API_KEY", key_set, "set" if key_set else "not set (mock mode)"))
 
     core = Path(__file__).resolve().parents[2] / "argo-core" / "target" / "release" / "argo-core"
     checks.append(("argo-core binary", core.is_file(), str(core)))
@@ -227,14 +227,14 @@ def _cmd_doctor() -> int:
         brain_ok = True
     except Exception:  # noqa: BLE001
         brain_ok = False
-    checks.append(("argo-brain importi", brain_ok, "argo_brain.core"))
+    checks.append(("argo-brain import", brain_ok, "argo_brain.core"))
 
     for name, ok, detail in checks:
-        print(f"  {'OK  ' if ok else 'XATO'}  {name:24s} {detail}")
+        print(f"  {'OK  ' if ok else 'FAIL'}  {name:24s} {detail}")
     # The API key being unset is acceptable (mock mode), so it is not fatal.
     fatal = [c for c in checks if not c[1] and c[0] != "ANTHROPIC_API_KEY"
              and c[0] != "argo-core binary"]
-    print(f"\n{'Tizim sogʻlom.' if not fatal else 'Muammolar topildi.'}")
+    print(f"\n{'System healthy.' if not fatal else 'Problems found.'}")
     return 0 if not fatal else 1
 
 
@@ -257,7 +257,7 @@ async def _cmd_selftest() -> int:
             r1 = await agent.process(
                 AgentRequest(user_id="u1", message="Salom, qalaysan?")
             )
-            checks.append(("oddiy chat", bool(r1.content) and r1.language == "uz"))
+            checks.append(("basic chat", bool(r1.content) and r1.language == "uz"))
 
             r2 = await agent.process(
                 AgentRequest(user_id="u1", message="hisobla 2 + 3 * 4")
@@ -270,7 +270,7 @@ async def _cmd_selftest() -> int:
             checks.append(("current_time tool", "current_time" in r3.tools_used))
 
             hist = await agent.memory.history("u1")
-            checks.append(("xotira saqlandi", len(hist) >= 6))
+            checks.append(("memory persisted", len(hist) >= 6))
 
             checks.append(
                 ("tool suite", len(agent.registry.names()) >= 10)
@@ -294,9 +294,9 @@ async def _cmd_selftest() -> int:
     )
 
     for name, ok in checks:
-        print(f"  {'OK  ' if ok else 'XATO'}  {name}")
+        print(f"  {'OK  ' if ok else 'FAIL'}  {name}")
     passed = all(ok for _, ok in checks)
-    summary = "Hammasi muvaffaqiyatli." if passed else "Ba'zi tekshiruvlar muvaffaqiyatsiz."
+    summary = "All checks passed." if passed else "Some checks failed."
     print(f"\n{summary}")
     return 0 if passed else 1
 

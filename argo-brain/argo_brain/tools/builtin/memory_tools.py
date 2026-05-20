@@ -23,9 +23,9 @@ class MemoryRememberTool(Tool):
 
     async def run(self, user_id: str, fact: str = "", **kwargs) -> ToolResult:
         if not fact.strip():
-            return ToolResult(content="Boʻsh fakt saqlanmaydi.", success=False)
+            return ToolResult(content="An empty fact will not be stored.", success=False)
         await self._memory.add(user_id, "system", f"[fact] {fact}")
-        return ToolResult(content="Eslab qoldim.")
+        return ToolResult(content="Got it, I'll remember that.")
 
 
 def memory_tools(memory) -> list[Tool]:

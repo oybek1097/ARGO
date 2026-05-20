@@ -33,7 +33,7 @@ async def run_channel(channel: Channel, agent: AgentCore) -> None:
                 log.exception("failed to handle message from %s", msg.user_id)
                 try:
                     await channel.send(
-                        msg.target, "Kechirasiz, xatolik yuz berdi."
+                        msg.target, "Sorry, an error occurred."
                     )
                 except Exception:  # noqa: BLE001
                     log.exception("failed to send error notice")

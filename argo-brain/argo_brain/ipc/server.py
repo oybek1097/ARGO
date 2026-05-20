@@ -57,19 +57,19 @@ class IPCServer:
             )
             return {"id": req_id, "history": history}
 
-        return {"id": req_id, "error": f"noma'lum action: {action}"}
+        return {"id": req_id, "error": f"unknown action: {action}"}
 
     async def _handle(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
         peer = "core"
-        log.info("IPC ulanish: %s", peer)
+        log.info("IPC connection: %s", peer)
         try:
             while line := await reader.readline():
                 try:
                     req = json.loads(line)
                 except json.JSONDecodeError:
-                    resp = {"error": "buzilgan JSON"}
+                    resp = {"error": "malformed JSON"}
                 else:
                     resp = await self._dispatch(req)
                 writer.write((json.dumps(resp, ensure_ascii=False) + "\n").encode())
@@ -78,7 +78,7 @@ class IPCServer:
             pass
         finally:
             writer.close()
-            log.info("IPC uzildi: %s", peer)
+            log.info("IPC disconnected: %s", peer)
 
     async def serve_forever(self) -> None:
         """Opens the socket and serves requests until stopped."""
@@ -88,7 +88,7 @@ class IPCServer:
             path.unlink()  # clean up the stale socket
 
         self._server = await asyncio.start_unix_server(self._handle, path=str(path))
-        log.info("IPC server tinglamoqda: %s", path)
+        log.info("IPC server listening: %s", path)
         async with self._server:
             await self._server.serve_forever()
 

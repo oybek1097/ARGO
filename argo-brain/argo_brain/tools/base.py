@@ -54,7 +54,7 @@ class Tool(ABC):
         try:
             result = await self.run(user_id, **kwargs)
         except Exception as exc:  # noqa: BLE001 — a tool error must not break the loop
-            result = ToolResult(content=f"Xato: {exc}", success=False)
+            result = ToolResult(content=f"Error: {exc}", success=False)
         result.duration_ms = int((time.perf_counter() - started) * 1000)
         return result
 

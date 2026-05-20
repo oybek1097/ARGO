@@ -35,8 +35,8 @@ class WriteFileTool(Tool):
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(content, encoding="utf-8")
         except OSError as exc:
-            return ToolResult(content=f"Yozib boʻlmadi: {exc}", success=False)
-        return ToolResult(content=f"{len(content)} belgi yozildi: {p}")
+            return ToolResult(content=f"Could not write: {exc}", success=False)
+        return ToolResult(content=f"{len(content)} characters written: {p}")
 
 
 class FindFilesTool(Tool):
@@ -55,7 +55,7 @@ class FindFilesTool(Tool):
                   **kwargs) -> ToolResult:
         root = Path(directory).expanduser()
         if not root.is_dir():
-            return ToolResult(content=f"Katalog emas: {directory}", success=False)
+            return ToolResult(content=f"Not a directory: {directory}", success=False)
         hits: list[str] = []
         for cur, _dirs, files in os.walk(root):
             for fname in files:
@@ -63,7 +63,7 @@ class FindFilesTool(Tool):
                     hits.append(str(Path(cur) / fname))
                     if len(hits) >= _MAX_HITS:
                         break
-        return ToolResult(content="\n".join(sorted(hits)) or "(topilmadi)")
+        return ToolResult(content="\n".join(sorted(hits)) or "(not found)")
 
 
 class GrepFilesTool(Tool):
@@ -83,7 +83,7 @@ class GrepFilesTool(Tool):
                   pattern: str = "*", **kwargs) -> ToolResult:
         root = Path(directory).expanduser()
         if not root.is_dir():
-            return ToolResult(content=f"Katalog emas: {directory}", success=False)
+            return ToolResult(content=f"Not a directory: {directory}", success=False)
         hits: list[str] = []
         for cur, _dirs, files in os.walk(root):
             for fname in files:
@@ -101,7 +101,7 @@ class GrepFilesTool(Tool):
                                 return ToolResult(content="\n".join(hits))
                 except OSError:
                     continue
-        return ToolResult(content="\n".join(hits) or "(topilmadi)")
+        return ToolResult(content="\n".join(hits) or "(not found)")
 
 
 def file_tools() -> list[Tool]:

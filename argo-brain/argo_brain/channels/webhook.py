@@ -119,7 +119,7 @@ class SlackChannel(WebhookChannel):
     def __init__(self, bot_token: str) -> None:
         super().__init__()
         if not bot_token:
-            raise ValueError("Slack bot token kerak")
+            raise ValueError("Slack bot token is required")
         self._token = bot_token
 
     def verify(self, payload: dict) -> dict | None:

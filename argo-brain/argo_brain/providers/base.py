@@ -68,7 +68,7 @@ class MockProvider(LLMProvider):
         self, messages: list[dict], tools: list[dict] | None = None
     ) -> LLMResponse:
         if not messages:
-            return LLMResponse(content="(bo'sh so'rov)", model=self.model)
+            return LLMResponse(content="(empty request)", model=self.model)
 
         last = messages[-1]
         tool_names = {
@@ -78,7 +78,7 @@ class MockProvider(LLMProvider):
         # 1) The last message is a tool result -> final answer
         if last.get("role") == "tool":
             return LLMResponse(
-                content=f"Natija: {last.get('content', '')}",
+                content=f"Result: {last.get('content', '')}",
                 model=self.model,
             )
 
@@ -120,7 +120,7 @@ class MockProvider(LLMProvider):
 
         # 4) Plain text response
         return LLMResponse(
-            content=f"[mock] Qabul qildim: {user_text}",
+            content=f"[mock] Received: {user_text}",
             model=self.model,
         )
 

@@ -58,7 +58,7 @@ class HttpGetTool(Tool):
         try:
             status, body = await asyncio.to_thread(_fetch, url)
         except (urllib.error.URLError, ValueError, OSError) as exc:
-            return ToolResult(content=f"Soʻrov xatosi: {exc}", success=False)
+            return ToolResult(content=f"Request error: {exc}", success=False)
         return ToolResult(content=body, metadata={"status": status})
 
 
@@ -85,7 +85,7 @@ class HttpPostTool(Tool):
                 headers={"Content-Type": "application/json"},
             )
         except (urllib.error.URLError, ValueError, OSError) as exc:
-            return ToolResult(content=f"Soʻrov xatosi: {exc}", success=False)
+            return ToolResult(content=f"Request error: {exc}", success=False)
         return ToolResult(content=body, metadata={"status": status})
 
 
@@ -102,7 +102,7 @@ class WebFetchTool(Tool):
         try:
             status, body = await asyncio.to_thread(_fetch, url)
         except (urllib.error.URLError, ValueError, OSError) as exc:
-            return ToolResult(content=f"Soʻrov xatosi: {exc}", success=False)
+            return ToolResult(content=f"Request error: {exc}", success=False)
         return ToolResult(content=_html_to_text(body), metadata={"status": status})
 
 

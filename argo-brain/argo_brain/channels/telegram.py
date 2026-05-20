@@ -41,7 +41,7 @@ class TelegramChannel(Channel):
 
     def __init__(self, token: str, poll_timeout: int = 30) -> None:
         if not token:
-            raise ValueError("Telegram bot token kerak")
+            raise ValueError("Telegram bot token is required")
         self._token = token
         self._base = f"{_API_ROOT}/bot{token}"
         self._poll_timeout = poll_timeout
@@ -77,7 +77,7 @@ class TelegramChannel(Channel):
 
     async def send(self, target: str, text: str) -> None:
         # Telegram rejects empty or over-long messages; chunk if needed.
-        for chunk in self._chunks(text or "(boʻsh javob)"):
+        for chunk in self._chunks(text or "(empty reply)"):
             await self._call("sendMessage", {"chat_id": target, "text": chunk})
 
     @staticmethod

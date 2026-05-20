@@ -19,7 +19,7 @@ class ToolRegistry:
 
     def register(self, tool: Tool) -> None:
         if not tool.name:
-            raise ValueError("Tool nomi bo'sh bo'lishi mumkin emas")
+            raise ValueError("Tool name must not be empty")
         self._tools[tool.name] = tool
 
     def get(self, name: str) -> Tool | None:

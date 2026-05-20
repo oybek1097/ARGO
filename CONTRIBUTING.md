@@ -1,8 +1,8 @@
-# Hissa qo'shish — ARGO Agent
+# Contributing to ARGO Agent
 
-ARGO ochiq manbali loyiha. PR'lar va issue'lar kutiladi.
+ARGO is an open-source project. Pull requests and issues are welcome.
 
-## Ishni boshlash
+## Getting started
 
 ```bash
 git clone https://github.com/oybek1097/ARGO.git
@@ -14,15 +14,16 @@ cd ARGO
 
 ```bash
 cd argo-brain
-python3 -m unittest discover -s tests   # testlar (73 ta, yashil bo'lishi shart)
+python3 -m unittest discover -s tests   # tests (84, must stay green)
 python3 -m argo_brain selftest          # smoke test
 ```
 
-- Python 3.11+ talab qilinadi.
-- Yadro **faqat stdlib** bilan ishlaydi — yangi bog'liqlik qo'shishdan oldin
-  muhokama qiling.
-- **Kod kommentariyalari ingliz tilida** yoziladi (jahon tili — global
-  hissadorlar uchun).
+- Python 3.11+ is required.
+- The core runs on the **stdlib only** — discuss before adding any new
+  dependency.
+- **The whole project is written in English** — code, comments, docstrings,
+  Markdown docs and user-facing strings. ARGO is a multilingual *product*,
+  but its codebase is English.
 
 ## argo-core (Rust)
 
@@ -34,21 +35,21 @@ cargo clippy -- -D warnings
 cargo fmt --check
 ```
 
-## PR jarayoni (TZ 11-bo'lim)
+## Pull request process (spec section 11)
 
-1. Issue ochib muhokama qiling.
-2. Branch yarating, o'zgartiring, testlarni yashil saqlang.
-3. PR yuboring — CI yashil bo'lishi shart.
-4. Commit xabarlarida `Signed-off-by:` trailer bo'lsin.
+1. Open an issue and discuss.
+2. Create a branch, make changes, keep the tests green.
+3. Submit a PR — CI must be green.
+4. Include a `Signed-off-by:` trailer in commit messages.
 
-## Kod uslubi
+## Code style
 
-| Til | Lint | Format |
+| Language | Lint | Format |
 |---|---|---|
 | Python | `ruff` | `ruff format` |
 | Rust | `cargo clippy` | `cargo fmt` |
 
-## Litsenziya
+## License
 
-Hissa qo'shish orqali kodingiz MIT litsenziyasi ostida tarqatilishiga rozilik
-bildirasiz.
+By contributing you agree that your code is distributed under the MIT
+license.

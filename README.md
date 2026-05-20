@@ -1,82 +1,84 @@
 # ARGO Agent v3.0
 
-> Ochiq manbali, ko'p tilli AI agent platformasi — **Rust gateway + Python brain**.
-> Markaziy Osiyo tillari va DevOps uchun maxsus optimallashtirilgan.
+> An open-source, multilingual AI agent platform — **Rust gateway + Python brain**.
+> Specially optimized for Central Asian languages and DevOps.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/status-alpha-orange)
-![Tests](https://img.shields.io/badge/tests-73%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-84%20passing-brightgreen)
 
-ARGO — Hermes Agent ekotizimiga feature-parity'ni maqsad qilgan, undan tashqari
-Markaziy Osiyo va sovereign deployment niche'lariga exclusive funksiyalar beruvchi
-agent platformasi. To'liq texnik spetsifikatsiya: [`ARGO_AGENT_v3_Texnik_Zadacha.md`](ARGO_AGENT_v3_Texnik_Zadacha.md).
+ARGO aims for feature parity with the Hermes Agent ecosystem and adds
+exclusive functionality for Central Asian and sovereign-deployment niches.
+Full technical specification:
+[`ARGO_AGENT_v3_Technical_Specification.md`](ARGO_AGENT_v3_Technical_Specification.md).
 
 ---
 
-## Tez boshlash
+## Quick start
 
 ```bash
-# Bir buyruqli o'rnatish (toolchain tekshiradi, argo-core quradi, sozlaydi)
+# One-shot install (checks the toolchain, builds argo-core, configures)
 ./scripts/setup.sh
 
-# yoki qo'lda:
+# or manually:
 cd argo-brain
-python3 -m argo_brain setup      # interaktiv sozlash sehrgari
-python3 -m argo_brain doctor     # diagnostika
-python3 -m argo_brain chat       # interaktiv suhbat (API kalitsiz)
+python3 -m argo_brain setup      # interactive setup wizard
+python3 -m argo_brain doctor     # diagnostics
+python3 -m argo_brain chat       # interactive conversation (no API key)
 python3 -m argo_brain serve      # HTTP gateway
 python3 -m argo_brain telegram   # Telegram bot
 ```
 
-`argo-brain` yadrosi **faqat Python stdlib** bilan ishlaydi — o'rnatishsiz darhol
-sinab ko'rsa bo'ladi.
+The `argo-brain` core runs on the **Python stdlib only** — no install
+needed to try it.
 
-## Repozitoriya tuzilishi
+## Repository layout
 
 ```
 ARGO/
 ├── argo-core/          # Rust gateway (Axum + Tokio) — HTTP, IPC, L0 memory, metrics
 ├── argo-brain/         # Python brain — agent loop, tools, memory, channels, plugins
-├── scripts/setup.sh    # bir buyruqli o'rnatuvchi
-├── ARGO_AGENT_v3_Texnik_Zadacha.md   # to'liq texnik zadacha (TZ)
-├── ARGO_TZ_Executive_Summary.md      # 1-sahifalik xulosa
-├── ARGO_TZ_Hermes_Parity_Matrix.md   # Hermes ↔ ARGO funksiya jadvali
+├── scripts/setup.sh    # one-shot installer
+├── ARGO_AGENT_v3_Technical_Specification.md   # full technical spec
+├── ARGO_Executive_Summary.md                  # one-page summary
+├── ARGO_Hermes_Parity_Matrix.md               # Hermes ↔ ARGO feature matrix
 └── LICENSE             # MIT
 ```
 
-## Hozirgi holat (alpha)
+## Current status (alpha)
 
-ARGO TZ bo'yicha **12 sprintlik** loyiha. Quyidagilar bajarilgan:
+ARGO is a **12-sprint** project per the spec. Completed so far:
 
-| Komponent | Holat |
+| Component | Status |
 |---|---|
-| `argo-core` — Rust gateway (`/api/health`, `/api/chat`, `/api/history`, `/metrics`) | ✅ ishlaydi (1.3 MB binary) |
-| `argo-brain` — agent loop (Plan→Execute), 13 built-in tool | ✅ ishlaydi |
-| Xotira — L0 (deque) + L1 (SQLite + FTS5) | ✅ |
-| LLM provayderlar — Mock + Anthropic | ✅ |
-| Skills, Plugin (5-hook), Kanban multi-agent, Cron | ✅ |
-| Til aniqlash — uz/ru/kk/ky/tg/en | ✅ |
-| Telegram kanali | ✅ |
+| `argo-core` — Rust gateway (`/api/health`, `/api/chat`, `/api/history`, `/metrics`) | ✅ working (1.3 MB binary) |
+| `argo-brain` — agent loop (Plan→Execute), 13 built-in tools | ✅ working |
+| Memory — L0 (deque) + L1 (SQLite + FTS5) | ✅ |
+| LLM providers — Mock + Anthropic | ✅ |
+| Skills, plugins (5 hooks), Kanban multi-agent, cron | ✅ |
+| Language detection — uz/ru/kk/ky/tg/en | ✅ |
+| Channels — Telegram, generic webhook, Slack | ✅ |
 | IPC (argo-core ↔ argo-brain) | ✅ |
-| Setup sehrgari + doctor | ✅ |
-| Qolgan 29+ kanal, TUI, web dashboard, MCP, 100+ tool | 🔜 keyingi sprintlar |
+| Setup wizard + doctor | ✅ |
+| Remaining 27+ channels, TUI, web dashboard, MCP, 100+ tools | 🔜 later sprints |
 
-Yo'l xaritasi: TZ 13-bo'lim. O'zgarishlar tarixi: [`CHANGELOG.md`](CHANGELOG.md).
+Roadmap: spec section 13. Change history: [`CHANGELOG.md`](CHANGELOG.md).
 
-## Arxitektura
+## Architecture
 
 ```
-Foydalanuvchi ─► Kanal adapter ─► argo-core (Rust) ──IPC──► argo-brain (Python)
-                                  HTTP/WS gateway          agent loop + tools
+User ─► Channel adapter ─► argo-core (Rust) ──IPC──► argo-brain (Python)
+                           HTTP/WS gateway          agent loop + tools
 ```
 
-`argo-core` — kichik, xavfsiz tashqi yuz; `argo-brain` — boy AI mantiq.
-Ikkisi Unix socketda satr-cheklangan JSON orqali bog'lanadi (TZ 3.4).
+`argo-core` is the small, hardened external face; `argo-brain` holds the
+rich AI logic. They communicate over a Unix socket using line-delimited
+JSON (spec section 3.4).
 
-## Hissa qo'shish
+## Contributing
 
-[`CONTRIBUTING.md`](CONTRIBUTING.md) ga qarang.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-## Litsenziya
+## License
 
-MIT — [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](LICENSE).

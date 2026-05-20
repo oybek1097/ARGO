@@ -20,7 +20,7 @@ class TestShellExecTool(unittest.IsolatedAsyncioTestCase):
     async def test_blocks_destructive_command(self):
         r = await ShellExecTool()("u1", command="rm   -rf   /")
         self.assertFalse(r.success)
-        self.assertIn("Bloklangan", r.content)
+        self.assertIn("Blocked", r.content)
 
     async def test_timeout(self):
         r = await ShellExecTool()("u1", command="sleep 5", timeout=1)

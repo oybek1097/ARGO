@@ -1,84 +1,84 @@
-# ARGO AGENT v3.0 — Texnik Zadacha (TZ)
+# ARGO AGENT v3.0 — Technical Specification (TZ)
 
-**Status:** Loyiha hujjati (Draft, May 2026)
-**Hujjat versiyasi:** 1.0
-**Mas'ul:** ARGO Agent Loyihasi
-**Asoslangan tahlil:** Hermes Agent v0.14.0 "Foundation Release" (NousResearch, 16 May 2026)
+**Status:** Project document (Draft, May 2026)
+**Document version:** 1.0
+**Owner:** ARGO Agent Project
+**Based on the analysis of:** Hermes Agent v0.14.0 "Foundation Release" (NousResearch, 16 May 2026)
 
 ---
 
-## 0. Annotatsiya (Executive Summary)
+## 0. Abstract (Executive Summary)
 
-ARGO Agent — ochiq manbali, mustaqil, ko'p tilli AI agent platformasi. **Maqsad:** Hermes Agent va boshqa zamonaviy agent frameworklarga arxitektura va ish unumdorligi bo'yicha o'lchanadigan ustunlik yarata olish, shu bilan birga Markaziy Osiyo va DevOps niche'lariga maxsus mahalliylashtirishni taqdim etish.
+ARGO Agent is an open-source, independent, multilingual AI agent platform. **Goal:** to achieve a measurable advantage over Hermes Agent and other modern agent frameworks in terms of architecture and performance, while also providing dedicated localization for the Central Asia and DevOps niches.
 
-### "100,000x kuchli" ifodasi haqida
+### About the "100,000x more powerful" claim
 
-Bu marketing ibora — muhandislikda o'lchanmaydi. Lekin u ortidagi maqsadni o'lchanadigan ko'rsatkichlarga ajratib chiqaramiz:
+This is a marketing phrase — it cannot be measured in engineering terms. Nonetheless, we break down the goal behind it into measurable metrics:
 
-| O'lchov | Hermes v0.14.0 | ARGO v3.0 maqsadi | Nisbat |
+| Metric | Hermes v0.14.0 | ARGO v3.0 target | Ratio |
 |---|---|---|---|
-| Idle RAM (gateway process) | ~400 MB | **<20 MB** (Rust core) | **20x kamroq** |
-| Cold start (interactive CLI) | ~1.5 s (v0.14 optimizatsiya) | **<150 ms** | **10x tezroq** |
-| Tool dispatch latency (intra-process) | ~10 ms (Python) | **<1 ms** (Rust IPC) | **10x tezroq** |
-| Concurrent WS connections/node | ~5,000 (Python asyncio) | **>50,000** (Tokio + Axum) | **10x ko'proq** |
-| Per-request P50 latency (excl. LLM) | ~80 ms | **<30 ms** | **2.7x tezroq** |
-| Memory ingestion throughput | ~500 msg/s | **>10,000 msg/s** | **20x ko'proq** |
-| Binary size (gateway, stripped) | N/A (Python) | **<5 MB** | yangi |
-| Cold deps (full install) | ~800 MB | **<200 MB** core, lazy extras | **4x kichikroq** |
-| Markaziy Osiyo tillari | 0 (yo'q) | **5 ta native** (uz, kk, ky, tg, tk) | yangi |
-| Native DevOps integratsiyalar | 0 | **Vault, K8s, Proxmox, SSH, Ansible** | yangi |
+| Idle RAM (gateway process) | ~400 MB | **<20 MB** (Rust core) | **20x less** |
+| Cold start (interactive CLI) | ~1.5 s (v0.14 optimization) | **<150 ms** | **10x faster** |
+| Tool dispatch latency (intra-process) | ~10 ms (Python) | **<1 ms** (Rust IPC) | **10x faster** |
+| Concurrent WS connections/node | ~5,000 (Python asyncio) | **>50,000** (Tokio + Axum) | **10x more** |
+| Per-request P50 latency (excl. LLM) | ~80 ms | **<30 ms** | **2.7x faster** |
+| Memory ingestion throughput | ~500 msg/s | **>10,000 msg/s** | **20x more** |
+| Binary size (gateway, stripped) | N/A (Python) | **<5 MB** | new |
+| Cold deps (full install) | ~800 MB | **<200 MB** core, lazy extras | **4x smaller** |
+| Central Asian languages | 0 (none) | **5 native** (uz, kk, ky, tg, tk) | new |
+| Native DevOps integrations | 0 | **Vault, K8s, Proxmox, SSH, Ansible** | new |
 
-**Geometrik o'rta:** ~10x improvement har bir o'lchov bo'yicha. "100,000x" — bu 11 ta mustaqil 10x yaxshilanishning ko'paytmasi. Realistik xulosa: **order of magnitude (10-30x) yaxshilanish har bir o'lchov bo'yicha, ko'p o'lchovlarda birgalikda**.
+**Geometric mean:** ~10x improvement across each metric. "100,000x" is the product of 11 independent 10x improvements. A realistic conclusion: **an order-of-magnitude (10-30x) improvement on each metric, achieved jointly across many metrics**.
 
-### Asosiy farqlovchi belgilar (ARGO Unique Selling Points)
+### Key differentiators (ARGO Unique Selling Points)
 
-1. **Bicultural-by-design**: ingliz/rus/o'zbek/qozoq/qirg'iz/tojik/turkman uchun birinchi-darajali til qo'llab-quvvatlash — UI emas, balki agent reasoning va response darajasida
-2. **Rust gateway, til-agnostik brain**: argo-core Rust'da, argo-brain Python-da, lekin brain'ni boshqa tilda (Go, Rust, TypeScript) yozish mumkin — Unix socket IPC orqali
-3. **DevOps-native**: Vault, Kubernetes, Proxmox, SSH, Ansible, Docker, Terraform — built-in toollar sifatida (Hermes'da bularning yo'q yoki skill orqali)
-4. **Hermes-compatible**: agentskills.io standartiga to'liq mos, Hermes skill'larini import qilish mumkin, Hermes MCP serverlariga ulanadi, OpenAI proxy bir xil
-5. **Compliance-friendly**: O'zbekiston Respublikasi Personal Data Law, Russia 152-FZ, GDPR'ga mos default'lar. PII redaction, audit log, sovereign deployment
-6. **Self-improving + self-maintaining**: skill curator, dialectic user modeling, reflection loop — Hermes'dagi parity, lekin yangi metrikalar bilan
+1. **Bicultural-by-design**: first-class language support for English/Russian/Uzbek/Kazakh/Kyrgyz/Tajik/Turkmen — not just at the UI level, but at the agent reasoning and response level
+2. **Rust gateway, language-agnostic brain**: argo-core is in Rust, argo-brain is in Python, but the brain can be written in another language (Go, Rust, TypeScript) — via Unix socket IPC
+3. **DevOps-native**: Vault, Kubernetes, Proxmox, SSH, Ansible, Docker, Terraform — as built-in tools (in Hermes these are absent or available only through skills)
+4. **Hermes-compatible**: fully conformant to the agentskills.io standard, Hermes skills can be imported, connects to Hermes MCP servers, identical OpenAI proxy
+5. **Compliance-friendly**: defaults aligned with the Personal Data Law of the Republic of Uzbekistan, Russia 152-FZ, and GDPR. PII redaction, audit log, sovereign deployment
+6. **Self-improving + self-maintaining**: skill curator, dialectic user modeling, reflection loop — parity with Hermes, but with new metrics
 
-### Muvaffaqiyat mezonlari (Success Criteria)
+### Success Criteria
 
-ARGO v3.0 GA (General Availability) chiqishi uchun barcha quyidagilar bajarilishi shart:
+For the ARGO v3.0 GA (General Availability) release, all of the following must be met:
 
-| # | Mezon | Maqsadli qiymat |
+| # | Criterion | Target value |
 |---|---|---|
-| 1 | Hermes-parity coverage | ≥95% xususiyatlar (yuqorida 18 ta kategoriyada) |
-| 2 | Performance ratios | barcha 11 ta o'lchov ≥maqsadli darajada |
+| 1 | Hermes-parity coverage | ≥95% of features (across the 18 categories above) |
+| 2 | Performance ratios | all 11 metrics ≥ the target level |
 | 3 | Test coverage | ≥85% unit, ≥70% integration |
-| 4 | All CI checks green | har bir PR'da: lint, type, test, security scan |
-| 5 | Documentation completeness | ≥1 ta sahifa har bir feature uchun, API reference 100% |
-| 6 | Native bench (vs Hermes) | har bir public benchmark'da kamida 2x tez |
-| 7 | OS qo'llab-quvvatlash | Linux/macOS/Windows/WSL2/Termux clean install + smoke test |
-| 8 | Security audit | tashqi audit, hech qanday P0 yoki P1 ochiq emas |
-| 9 | i18n coverage | UI 25+ til, agent reasoning 7+ til native sifatda |
+| 4 | All CI checks green | on every PR: lint, type, test, security scan |
+| 5 | Documentation completeness | ≥1 page per feature, API reference 100% |
+| 6 | Native bench (vs Hermes) | at least 2x faster on every public benchmark |
+| 7 | OS support | Linux/macOS/Windows/WSL2/Termux clean install + smoke test |
+| 8 | Security audit | external audit, no open P0 or P1 findings |
+| 9 | i18n coverage | UI in 25+ languages, agent reasoning in 7+ languages at native quality |
 | 10 | First-month metrics (post-launch) | ≥1,000 GitHub stars, ≥50 contributors, ≥10 published skills |
 
 ---
 
-## 1. Maqsadlar va chegaralar
+## 1. Goals and boundaries
 
-### 1.1 Funksional maqsadlar (Functional Goals)
+### 1.1 Functional Goals
 
-| # | Maqsad | Tafsilot |
+| # | Goal | Detail |
 |---|---|---|
-| F1 | Hermes-parity to'liq xususiyatlar to'plami | ushbu hujjatdagi har bir komponentda implementatsiya |
-| F2 | Markaziy Osiyo tillari native qo'llab-quvvatlash | tokenizatsiya, til aniqlash, response routing, lokalizatsiya |
-| F3 | DevOps tools built-in | Vault, K8s, Proxmox, SSH, Ansible, Terraform, Docker, ArgoCD |
-| F4 | 30+ messaging platformalar | Hermes'dagi 22 + Yandex.Messenger, VK, Mango Office, MyChat, Astra Linux Communicator |
-| F5 | Multi-runtime brain | Python birinchi navbatda; Go va Rust portlar v3.5+ |
+| F1 | Full Hermes-parity feature set | implementation across every component in this document |
+| F2 | Native support for Central Asian languages | tokenization, language detection, response routing, localization |
+| F3 | Built-in DevOps tools | Vault, K8s, Proxmox, SSH, Ansible, Terraform, Docker, ArgoCD |
+| F4 | 30+ messaging platforms | the 22 in Hermes + Yandex.Messenger, VK, Mango Office, MyChat, Astra Linux Communicator |
+| F5 | Multi-runtime brain | Python first; Go and Rust ports in v3.5+ |
 | F6 | Sovereign deployment | Russia, Uzbekistan, China data residency; airgapped mode |
-| F7 | Programmatic Tool Calling | Python script tool access bilan (Hermes execute_code parity) |
-| F8 | Plugin marketplace | Skills Hub + Plugin Hub, ikkalasi ham agentskills.io-compatible |
+| F7 | Programmatic Tool Calling | Python scripts with tool access (Hermes execute_code parity) |
+| F8 | Plugin marketplace | Skills Hub + Plugin Hub, both agentskills.io-compatible |
 
-### 1.2 Funksional bo'lmagan maqsadlar (Non-Functional Goals)
+### 1.2 Non-Functional Goals
 
-| # | Maqsad | Maqsadli qiymat |
+| # | Goal | Target value |
 |---|---|---|
 | NF1 | Gateway throughput | ≥10,000 RPS (per node, simple chat) |
-| NF2 | Brain throughput | ≥1,000 RPS (per node, tools yoqilgan) |
+| NF2 | Brain throughput | ≥1,000 RPS (per node, tools enabled) |
 | NF3 | WebSocket fan-out | ≥50,000 concurrent connections per node |
 | NF4 | Memory write latency P99 | <10 ms (L1 + L2) |
 | NF5 | Memory read latency P99 | <50 ms (full 3-layer smart context) |
@@ -91,61 +91,61 @@ ARGO v3.0 GA (General Availability) chiqishi uchun barcha quyidagilar bajarilish
 | NF12 | Network egress (idle) | 0 (no telemetry by default) |
 | NF13 | Uptime SLO (hosted instance) | 99.9% (post-GA) |
 
-### 1.3 Non-goals (qilmaymiz)
+### 1.3 Non-goals (what we will not do)
 
-| # | Non-goal | Sabab |
+| # | Non-goal | Reason |
 |---|---|---|
-| NG1 | Closed-source komponentlar | MIT-only |
-| NG2 | Mandatory cloud account | self-hosted birinchi navbatda |
-| NG3 | Telemetri default ON | privacy-first |
-| NG4 | Single-tenant only | multi-tenant'ni qo'llab-quvvatlash kerak |
-| NG5 | Mobile-native apps (iOS/Android binary) | messaging gateway orqali yetishish kifoya |
-| NG6 | LLM training | ARGO foydalanadi, lekin model training Nous Research, OpenAI va boshqalarniki |
-| NG7 | IDE-bound copilot | Hermes singari, ACP'ga qo'shilamiz lekin asosiy emas |
-| NG8 | Tool catalog quality police | community-driven, lekin signed trust signal bor |
+| NG1 | Closed-source components | MIT-only |
+| NG2 | Mandatory cloud account | self-hosted first |
+| NG3 | Telemetry default ON | privacy-first |
+| NG4 | Single-tenant only | multi-tenancy must be supported |
+| NG5 | Mobile-native apps (iOS/Android binary) | reachability via the messaging gateway is sufficient |
+| NG6 | LLM training | ARGO consumes models, but model training belongs to Nous Research, OpenAI, and others |
+| NG7 | IDE-bound copilot | like Hermes, we add ACP support but it is not the focus |
+| NG8 | Tool catalog quality policing | community-driven, but with a signed trust signal |
 
 ---
 
-## 2. Hermes vs ARGO maqsadli xususiyatlar matritsasi
+## 2. Hermes vs ARGO target feature matrix
 
-(To'liq matritsa Ilova A da. Bu yerda — qisqartirilgan.)
+(The full matrix is in Appendix A. This is an abridged version.)
 
-| Kategoriya | Hermes v0.14 | ARGO v3.0 | Ustunlik |
+| Category | Hermes v0.14 | ARGO v3.0 | Advantage |
 |---|---|---|---|
-| Asosiy til | Python | **Rust + Python** | ARGO |
+| Core language | Python | **Rust + Python** | ARGO |
 | Cold start | ~1.5s | **<150ms** | ARGO 10x |
 | Idle RAM | ~400 MB | **<20 MB** | ARGO 20x |
 | Built-in tools | ~70 | **≥120** | ARGO |
-| Messaging platformalar | 22 | **≥30** | ARGO |
+| Messaging platforms | 22 | **≥30** | ARGO |
 | Terminal backends | 7 | **≥12** | ARGO |
-| LLM provider integratsiyalari | ~20 native | **≥30 native** + LiteLLM 200+ | ARGO |
+| LLM provider integrations | ~20 native | **≥30 native** + LiteLLM 200+ | ARGO |
 | Memory layers | 3 | **4** (+ optional knowledge graph) | ARGO |
-| Plugin tiplari | 3 | **5** (+ skill providers, channel adapters) | ARGO |
-| UI tillari | 7 + 3 content | **25 UI + 7 first-class agent** | ARGO |
-| OS qo'llab-quvvatlash | 5 (L/m/W/WSL/Termux) | **6** (+ FreeBSD) | ARGO |
+| Plugin types | 3 | **5** (+ skill providers, channel adapters) | ARGO |
+| UI languages | 7 + 3 content | **25 UI + 7 first-class agent** | ARGO |
+| OS support | 5 (L/m/W/WSL/Termux) | **6** (+ FreeBSD) | ARGO |
 | MCP | server + client | **server + client + gateway** | ARGO |
 | Multi-agent | Kanban + delegate + MoA | **Kanban + delegate + MoA + DAG workflows** | ARGO |
-| DevOps stack | yo'q | **Vault, K8s, Proxmox, SSH, Ansible, TF, Docker, ArgoCD** | **ARGO exclusive** |
-| Sovereign deployment | yo'q | **RU/UZ/CN compliance, airgapped** | **ARGO exclusive** |
-| Markaziy Osiyo tillari | yo'q | **5 ta native** | **ARGO exclusive** |
-| GitHub stars (start) | 140,000 (3 oyda) | 0 → maqsad 5,000 (3 oyda) | Hermes |
-| Contributors | 295+ | 1 → maqsad 50+ (3 oyda) | Hermes |
-| Hujjatlar saytida | hermes-agent.nousresearch.com/docs | argo-agent.io/docs (yaratiladi) | Hermes |
+| DevOps stack | none | **Vault, K8s, Proxmox, SSH, Ansible, TF, Docker, ArgoCD** | **ARGO exclusive** |
+| Sovereign deployment | none | **RU/UZ/CN compliance, airgapped** | **ARGO exclusive** |
+| Central Asian languages | none | **5 native** | **ARGO exclusive** |
+| GitHub stars (start) | 140,000 (in 3 months) | 0 → target 5,000 (in 3 months) | Hermes |
+| Contributors | 295+ | 1 → target 50+ (in 3 months) | Hermes |
+| Documentation site | hermes-agent.nousresearch.com/docs | argo-agent.io/docs (to be created) | Hermes |
 
 ---
 
-## 3. Tizim arxitekturasi
+## 3. System architecture
 
-### 3.1 Yuqori darajadagi diagramma
+### 3.1 High-level diagram
 
 ```
                             ┌──────────────────────────────────────────┐
-                            │             FOYDALANUVCHI                │
+                            │                  USER                    │
                             │  (Telegram/Discord/Slack/WhatsApp/CLI…)  │
                             └─────────────────────┬────────────────────┘
                                                   │
                             ┌─────────────────────▼────────────────────┐
-                            │   CHANNEL ADAPTERS (30+ platformalar)    │
+                            │    CHANNEL ADAPTERS (30+ platforms)      │
                             │     [Python: argo-brain/channels/]       │
                             └─────────────────────┬────────────────────┘
                                                   │ HTTP / WS
@@ -221,25 +221,25 @@ ARGO v3.0 GA (General Availability) chiqishi uchun barcha quyidagilar bajarilish
    └─────────────────────────────────────────────┘
 ```
 
-### 3.2 Komponent javobgarliklari
+### 3.2 Component responsibilities
 
-| Komponent | Til | Asosiy javobgarliklari | Faylga taxminiy hajm |
+| Component | Language | Main responsibilities | Approximate file size |
 |---|---|---|---|
-| argo-core | Rust | Gateway, IPC, L1 memory, audit, rate-limit, sandbox | ~15,000 satr |
-| argo-brain | Python 3.11+ | Agent loop, tools, skills, channels, providers, MCP | ~50,000 satr |
-| argo-cli | Rust | `argo` binary, install, doctor, config, model picker | ~5,000 satr |
-| argo-tui | TypeScript/React/Ink | Interactive CLI (Hermes paritet) | ~10,000 satr |
-| argo-web | Next.js + React | Dashboard (web UI) | ~15,000 satr |
-| argo-mcp-tools | Python + TS | Bundled MCP servers (computer-use-linux, browser, etc.) | ~8,000 satr |
-| argo-skills | Markdown | 150+ built-in skill markdown fayllari | ~20,000 satr |
-| argo-docs | Docusaurus | Hujjatlar sayti | yangi |
+| argo-core | Rust | Gateway, IPC, L1 memory, audit, rate-limit, sandbox | ~15,000 lines |
+| argo-brain | Python 3.11+ | Agent loop, tools, skills, channels, providers, MCP | ~50,000 lines |
+| argo-cli | Rust | `argo` binary, install, doctor, config, model picker | ~5,000 lines |
+| argo-tui | TypeScript/React/Ink | Interactive CLI (Hermes parity) | ~10,000 lines |
+| argo-web | Next.js + React | Dashboard (web UI) | ~15,000 lines |
+| argo-mcp-tools | Python + TS | Bundled MCP servers (computer-use-linux, browser, etc.) | ~8,000 lines |
+| argo-skills | Markdown | 150+ built-in skill markdown files | ~20,000 lines |
+| argo-docs | Docusaurus | Documentation site | new |
 
-### 3.3 Deployment topologiyasi
+### 3.3 Deployment topology
 
-**Bitta-node (default):**
+**Single-node (default):**
 ```
 ┌──────────────────────────────────────────┐
-│           Container / VM (1 ta)          │
+│           Container / VM (1)             │
 │  ┌─────────────────────────────────────┐ │
 │  │ argo-core (Rust)        :8000      │ │
 │  │ argo-brain (Python)     :8080 IPC  │ │
@@ -249,7 +249,7 @@ ARGO v3.0 GA (General Availability) chiqishi uchun barcha quyidagilar bajarilish
 └──────────────────────────────────────────┘
 ```
 
-**Ko'p-node (production):**
+**Multi-node (production):**
 ```
                 ┌─────── Load Balancer ───────┐
                 │                              │
@@ -275,20 +275,20 @@ ARGO v3.0 GA (General Availability) chiqishi uchun barcha quyidagilar bajarilish
 
 **Airgapped (sovereign):**
 ```
-Bir xil ko'p-node, lekin tashqi LLM provider o'rniga:
+The same multi-node topology, but instead of external LLM providers:
   - Ollama cluster (local GPU)
   - vLLM cluster (local GPU)
   - Yandex GPT API (Russia data residency)
   - SberCloud GigaChat (Russia)
   - Tencent Hunyuan (China)
-  Tashqi internet kerak emas. DNS o'rniga hosts file.
+  No external internet required. A hosts file instead of DNS.
 ```
 
-### 3.4 IPC protokoli (argo-core ↔ argo-brain)
+### 3.4 IPC protocol (argo-core ↔ argo-brain)
 
-Unix socket'larda satr-cheklangan JSON. Har bir xabar — bitta satr (`\n` bilan tugaydigan).
+Line-delimited JSON over Unix sockets. Each message is a single line (terminated with `\n`).
 
-**Brain → Core (callbacks va statistika):**
+**Brain → Core (callbacks and statistics):**
 ```json
 {"action":"get_history","user_id":"u123","limit":30}
 {"action":"fts_search","user_id":"u123","query":"vault setup"}
@@ -326,7 +326,7 @@ Unix socket'larda satr-cheklangan JSON. Har bir xabar — bitta satr (`\n` bilan
 }
 ```
 
-**Streaming variant** — Core saqlaydigan `chunk` xabarlari brain'dan kelishi mumkin:
+**Streaming variant** — `chunk` messages stored by Core may arrive from the brain:
 ```json
 {"id":"uuid","type":"chunk","delta":"deploy "}
 {"id":"uuid","type":"chunk","delta":"started"}
@@ -337,13 +337,13 @@ Unix socket'larda satr-cheklangan JSON. Har bir xabar — bitta satr (`\n` bilan
 
 ---
 
-## 4. Komponentlar batafsil
+## 4. Components in detail
 
 ### 4.1 argo-core (Rust gateway)
 
-**Maqsad:** zaharlanmaydigan, kuchli, kichik perimetri bo'lgan tashqi yuz.
+**Purpose:** a hardened, robust external face with a small attack surface.
 
-**Modullari:**
+**Modules:**
 
 ```
 argo-core/
@@ -388,17 +388,17 @@ argo-core/
 
 **Public HTTP endpoints (Axum routes):**
 
-| Method | Path | Maqsad |
+| Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/health` | health probe + version |
 | GET | `/api/version` | semver, build hash, features |
-| POST | `/api/chat` | sync chat (kanal API'lari uchun) |
+| POST | `/api/chat` | sync chat (for channel APIs) |
 | POST | `/api/chat/stream` | streaming chat (SSE) |
-| GET | `/api/history/:uid` | xabar tarixi |
-| GET | `/api/search/:uid?q=` | FTS qidirish |
+| GET | `/api/history/:uid` | message history |
+| GET | `/api/search/:uid?q=` | FTS search |
 | GET | `/api/profile/:uid` | user profile |
-| PUT | `/api/profile/:uid` | profile yangilash |
-| POST | `/api/goal/:sid` | session goal o'rnatish |
+| PUT | `/api/profile/:uid` | update profile |
+| POST | `/api/goal/:sid` | set session goal |
 | GET | `/api/audit?from=&to=` | audit log filter |
 | WS | `/ws/:uid` | duplex stream (text + binary) |
 | POST | `/v1/chat/completions` | OpenAI-compatible |
@@ -412,17 +412,17 @@ argo-core/
 | POST | `/webhook/:platform` | platform webhook receiver |
 | GET | `/metrics` | Prometheus scraping |
 
-**Header'lar (har bir endpoint qo'llab-quvvatlaydi):**
+**Headers (supported by every endpoint):**
 
-- `Idempotency-Key: <uuid>` — bir xil request 24 soat ichida bir martagina bajariladi
+- `Idempotency-Key: <uuid>` — an identical request is executed only once within 24 hours
 - `X-ARGO-Session-Id: <id>` — session continuity
-- `X-ARGO-Session-Key: <hmac>` — pluggable memory providers uchun
-- `Authorization: Bearer <token>` — JWT yoki API key
-- `X-Request-Id: <id>` — distributed tracing (autogen agar yo'q bo'lsa)
+- `X-ARGO-Session-Key: <hmac>` — for pluggable memory providers
+- `Authorization: Bearer <token>` — JWT or API key
+- `X-Request-Id: <id>` — distributed tracing (autogenerated if absent)
 
-**Performance budgetlari:**
+**Performance budgets:**
 
-| Operatsiya | Maqsadli P50 | Maqsadli P99 |
+| Operation | Target P50 | Target P99 |
 |---|---|---|
 | HTTP route → IPC | <0.5 ms | <2 ms |
 | L0 memory write | <0.05 ms | <0.2 ms |
@@ -433,20 +433,20 @@ argo-core/
 | Audit log write | <0.5 ms | <2 ms |
 | End-to-end chat (excl. brain) | <10 ms | <30 ms |
 
-**Xavfsizlik:**
+**Security:**
 
-- **Linux sandbox:** `seccomp-bpf` filtri — quyidagi syscall'lar bloklanadi: `mount`, `umount`, `pivot_root`, `chroot`, `ptrace`, `bpf`, `clone3` (CLONE_NEWUSER bilan), `unshare`, `setns`, `keyctl`, `kexec_load`, `init_module`. Faqat asosiy I/O, network, dinamik xotira ruxsat etilgan.
+- **Linux sandbox:** `seccomp-bpf` filter — the following syscalls are blocked: `mount`, `umount`, `pivot_root`, `chroot`, `ptrace`, `bpf`, `clone3` (with CLONE_NEWUSER), `unshare`, `setns`, `keyctl`, `kexec_load`, `init_module`. Only basic I/O, networking, and dynamic memory are permitted.
 - **rlimit:** `RLIMIT_NOFILE=4096`, `RLIMIT_NPROC=512`, `RLIMIT_AS=4GB`, `RLIMIT_CPU=indefinite`
 - **TLS:** rustls (Ring/aws-lc-rs backend), TLS 1.3 only by default, mTLS optional
 - **DDoS:** per-IP rate limit (default: 100 RPS), per-user rate limit (default: 30 chat/min), per-token budget (default: 100k tokens/day free tier)
-- **Audit:** har bir tool call, har bir auth event, har bir admin action — append-only log
-- **PII redaction:** kirib chiquvchi xabarlar va log'larda — telefon, email, IBAN/INN/STIR, kredit karta, IP, MAC, SSH key. Konfiguratsiya: `security.redaction.enabled = true` (default ON), `security.redaction.replacements = {phone: "[PHONE]", ...}`
+- **Audit:** every tool call, every auth event, every admin action — append-only log
+- **PII redaction:** in inbound and outbound messages and logs — phone, email, IBAN/INN/STIR, credit card, IP, MAC, SSH key. Configuration: `security.redaction.enabled = true` (default ON), `security.redaction.replacements = {phone: "[PHONE]", ...}`
 
 ### 4.2 argo-brain (Python)
 
-**Maqsad:** AI agent core — tool dispatching, memory orchestration, channel logic.
+**Purpose:** the AI agent core — tool dispatching, memory orchestration, channel logic.
 
-**Modullari:**
+**Modules:**
 
 ```
 argo_brain/
@@ -636,13 +636,13 @@ argo_brain/
 │   ├── locales/            # UI translations (25+)
 │   ├── tokenizer/          # multi-language tokenizer hints
 │   └── ca/                 # Central Asian language packs
-│       ├── uz.py           # O'zbek (Latin + Cyrillic)
-│       ├── kk.py           # Qazaq
-│       ├── ky.py           # Кыргыз
-│       ├── tg.py           # Тоҷикӣ
-│       └── tk.py           # Türkmen
+│       ├── uz.py           # Uzbek (Latin + Cyrillic)
+│       ├── kk.py           # Kazakh
+│       ├── ky.py           # Kyrgyz
+│       ├── tg.py           # Tajik
+│       └── tk.py           # Turkmen
 ├── compliance/
-│   ├── uz_152.py           # O'zR Personal Data Law
+│   ├── uz_152.py           # Uzbekistan Personal Data Law
 │   ├── ru_152.py           # Russia 152-FZ
 │   ├── gdpr.py
 │   └── cn_pipl.py          # China PIPL
@@ -765,19 +765,19 @@ async def process(self, msg: Message) -> AgentResp:
                      duration_ms=int((time.time()-t0)*1000))
 ```
 
-### 4.3 Memory subsystem (4 qatlam)
+### 4.3 Memory subsystem (4 layers)
 
 **L0 — In-process working memory (Rust DashMap + Python deque):**
 
-- Tezkor real-time same-session visibility
+- Fast real-time same-session visibility
 - DashMap: per-user `VecDeque<Msg>` (max 200 messages per user)
-- Python brain'da paralel: `deque(maxlen=200)`
-- Tezkorlik: 0.05 ms write, 0.1 ms read
-- Hayot davri: process lifetime
+- In parallel in the Python brain: `deque(maxlen=200)`
+- Speed: 0.05 ms write, 0.1 ms read
+- Lifetime: process lifetime
 
 **L1 — Persistent (SQLite WAL):**
 
-Schema (qisqartirilgan):
+Schema (abridged):
 
 ```sql
 PRAGMA journal_mode = WAL;
@@ -1018,7 +1018,7 @@ CREATE TABLE user_settings (
 );
 ```
 
-**L2 — Vector (ChromaDB embedded yoki Qdrant):**
+**L2 — Vector (ChromaDB embedded or Qdrant):**
 
 Default: ChromaDB embedded (single-node). Production: Qdrant (multi-node, HNSW, payload index).
 
@@ -1030,7 +1030,7 @@ collection = qdrant.collection("argo_memory", vector_size=1536, distance="Cosine
 
 **L3 — Knowledge graph (optional):**
 
-For users who enable it: Neo4j yoki Memgraph. Edges: user → fact, fact → entity, entity → entity. Built incrementally by Honcho-style observer during conversation.
+For users who enable it: Neo4j or Memgraph. Edges: user → fact, fact → entity, entity → entity. Built incrementally by a Honcho-style observer during conversation.
 
 ```cypher
 (u:User {id:"u123"})-[:KNOWS]->(p:Person {name:"Alisher"})
@@ -1041,7 +1041,7 @@ For users who enable it: Neo4j yoki Memgraph. Edges: user → fact, fact → ent
 **Compaction strategy:**
 
 - L0: maxlen=200 (in-memory, oldest evicted)
-- L1: per-user `messages` ≥ `max_entries` (default: 1000) bo'lganda compaction triggers:
+- L1: compaction triggers when per-user `messages` ≥ `max_entries` (default: 1000):
   - Tokenize last 500 messages with LLM (summary skill)
   - Replace bottom 200 with single "summary" message (role=`system`, importance=2.0)
   - Net: keeps last ~800 messages + 1 summary
@@ -1095,7 +1095,7 @@ class ToolResult:
 
 **Tool taxonomy (120+ built-in):**
 
-| Toolset | Tools (taxminiy) |
+| Toolset | Tools (approximate) |
 |---|---|
 | `web` (5) | web_search, web_fetch, http_get, http_post, web_extract |
 | `search` (2) | x_search, semantic_web_search |
@@ -1205,10 +1205,10 @@ ARGO additions (8+):
 - Per-channel rate limit
 - Per-channel quota
 
-### 4.6 Plugin system (5 ta tip)
+### 4.6 Plugin system (5 types)
 
 ```python
-# Tip 1: General plugin
+# Type 1: General plugin
 class ArgPlugin(ABC):
     name: str
     version: str
@@ -1228,21 +1228,21 @@ class ArgPlugin(ABC):
     async def on_handoff_created(self, ticket): ...
     async def handle_command(self, cmd, user_id, args) -> str | None: ...
 
-# Tip 2: Memory provider
+# Type 2: Memory provider
 class MemoryProvider(ABC):
     async def remember(self, user_id, fact, source): ...
     async def recall(self, user_id, query, k=5): ...
     async def forget(self, user_id, fact_id): ...
     async def export(self, user_id) -> dict: ...
 
-# Tip 3: Context engine (alternative context management)
+# Type 3: Context engine (alternative context management)
 class ContextEngine(ABC):
     async def build_context(self, user_id, query) -> str: ...
 
-# Tip 4: Channel adapter (custom messaging platform)
+# Type 4: Channel adapter (custom messaging platform)
 class ChannelAdapter(Channel): ...
 
-# Tip 5: Skill provider (alternative skill source)
+# Type 5: Skill provider (alternative skill source)
 class SkillProvider(ABC):
     name: str
     async def search(self, query) -> list[SkillMeta]: ...
@@ -1679,7 +1679,7 @@ argo cron add \
 
 **Compliance modules:**
 
-- `compliance/uz_152.py` — O'zR Personal Data Law (data residency in UZ, audit retention 5 years, redaction of citizen ID)
+- `compliance/uz_152.py` — Uzbekistan Personal Data Law (data residency in UZ, audit retention 5 years, redaction of citizen ID)
 - `compliance/ru_152.py` — Russia 152-FZ (data residency in RU, audit logs, redaction of OGRN/INN)
 - `compliance/gdpr.py` — GDPR (right to erasure, data portability, consent management)
 - `compliance/cn_pipl.py` — China PIPL (data residency in CN, sensitive data flags)
@@ -1730,11 +1730,11 @@ result = await tools.shell_exec(
 
 ---
 
-## 5. Data modellar (qisqacha sxemalar — to'liq sxema Ilova B'da)
+## 5. Data models (brief schemas — full schema in Appendix B)
 
-(Yuqorida 4.3 da to'liq SQL schema berilgan.)
+(The full SQL schema is given in section 4.3 above.)
 
-**Migration policy:** Alembic-style versioned migrations, forward-only by default, with downgrade scripts. Each migration tagged with feature flag.
+**Migration policy:** Alembic-style versioned migrations, forward-only by default, with downgrade scripts. Each migration tagged with a feature flag.
 
 **Backup:** automatic SQLite backup every 6 hours to `~/.argo/backups/` (rolling 7-day retention). Optional S3 sync.
 
@@ -1742,11 +1742,11 @@ result = await tools.shell_exec(
 
 ---
 
-## 6. API spetsifikatsiyasi (asosiy nuqtalar)
+## 6. API specification (key points)
 
-(Section 4.1 va 4.9 da batafsil.)
+(Detailed in sections 4.1 and 4.9.)
 
-OpenAPI 3.1 spetsifikatsiyasi avtomatik generatsiya qilinadi: `argo openapi > spec.yaml`. Sayt: `argo-agent.io/api`.
+The OpenAPI 3.1 specification is generated automatically: `argo openapi > spec.yaml`. Site: `argo-agent.io/api`.
 
 ---
 
@@ -1975,23 +1975,23 @@ Default exporter: OTLP/gRPC to local collector. Optional: Jaeger, Tempo, DataDog
 
 ---
 
-## 9. Performance targetlari (yana batafsil)
+## 9. Performance targets (further detail)
 
-(0-bo'limda yuqori darajada berilgan; bu yerda — komponentlar bo'yicha.)
+(Given at a high level in section 0; here, broken down by component.)
 
 **Core gateway:**
 
-| Operatsiya | P50 | P99 | Maxsus shart |
+| Operation | P50 | P99 | Special condition |
 |---|---|---|---|
-| /api/health | 0.1 ms | 1 ms | jvozhi |
-| /api/chat (excl. brain) | 5 ms | 20 ms | sandbox bilan |
-| WebSocket message echo | 0.3 ms | 2 ms | bitta xabar |
-| OpenAI /v1/chat/completions overhead | 10 ms | 30 ms | streaming bilan |
-| MCP tools/list | 2 ms | 8 ms | 50 ta tool bilan |
+| /api/health | 0.1 ms | 1 ms | response only |
+| /api/chat (excl. brain) | 5 ms | 20 ms | with sandbox |
+| WebSocket message echo | 0.3 ms | 2 ms | single message |
+| OpenAI /v1/chat/completions overhead | 10 ms | 30 ms | with streaming |
+| MCP tools/list | 2 ms | 8 ms | with 50 tools |
 
 **Brain agent loop (single iteration, no LLM):**
 
-| Operatsiya | P50 | P99 |
+| Operation | P50 | P99 |
 |---|---|---|
 | Lang detect | 1 ms | 5 ms |
 | Build context (L0+L1+L2 fusion) | 30 ms | 100 ms |
@@ -2001,7 +2001,7 @@ Default exporter: OTLP/gRPC to local collector. Optional: Jaeger, Tempo, DataDog
 
 **End-to-end (with Claude Sonnet, no tools):**
 
-| Operatsiya | P50 | P99 |
+| Operation | P50 | P99 |
 |---|---|---|
 | Simple chat (200 token output) | 1.5 s | 4 s |
 | With 1 tool call | 3 s | 8 s |
@@ -2010,7 +2010,7 @@ Default exporter: OTLP/gRPC to local collector. Optional: Jaeger, Tempo, DataDog
 
 **Throughput (per node):**
 
-| Workload | Maqsadli |
+| Workload | Target |
 |---|---|
 | Concurrent WS connections | ≥50,000 |
 | RPS (gateway-only echo) | ≥10,000 |
@@ -2020,9 +2020,9 @@ Default exporter: OTLP/gRPC to local collector. Optional: Jaeger, Tempo, DataDog
 
 ---
 
-## 10. Xavfsizlik modeli (yana batafsil)
+## 10. Security model (further detail)
 
-(Section 4.14 da yuqori darajada berilgan.)
+(Given at a high level in section 4.14.)
 
 **Auth:**
 
@@ -2069,7 +2069,7 @@ Append-only, signed, exported to SIEM (Splunk, ELK, Sentinel) via Fluent Bit.
 
 ---
 
-## 11. Sifat (Testing + CI/CD)
+## 11. Quality (Testing + CI/CD)
 
 **Test pyramid:**
 
@@ -2145,9 +2145,9 @@ publish:
 
 ---
 
-## 12. Hujjatlar talablari
+## 12. Documentation requirements
 
-**Hujjatlar sayti:** `argo-agent.io/docs` (Docusaurus 3)
+**Documentation site:** `argo-agent.io/docs` (Docusaurus 3)
 
 Structure:
 ```
@@ -2211,62 +2211,62 @@ docs/
 
 ## 13. Release roadmap
 
-**Sprint structure:** 2-week sprints, 12 sprints (6 oy) to v3.0 GA.
+**Sprint structure:** 2-week sprints, 12 sprints (6 months) to v3.0 GA.
 
-### Sprint 0 — Foundation Reset (2 hafta)
-**Goal:** v2.0 buglarini tuzatish, foundation kodi tayyor.
+### Sprint 0 — Foundation Reset (2 weeks)
+**Goal:** fix v2.0 bugs, foundation code ready.
 **Deliverables:**
-- Barcha v2.0 blocking buglar tuzatildi (config, KanbanManager, SessionCache, IPC, CronScheduler)
-- Testlar 100% yashil (29/29 → 200+/200+)
-- CI pipeline ishlaydi
+- All v2.0 blocking bugs fixed (config, KanbanManager, SessionCache, IPC, CronScheduler)
+- Tests 100% green (29/29 → 200+/200+)
+- CI pipeline working
 - Public repo on GitHub (alpha)
-- README halol qayta yozildi
+- README honestly rewritten
 
-### Sprint 1 — Rust Gateway v1 (2 hafta)
-- argo-core barcha endpoint'lar (HTTP, WS, OpenAI, MCP HTTP, webhooks)
+### Sprint 1 — Rust Gateway v1 (2 weeks)
+- argo-core all endpoints (HTTP, WS, OpenAI, MCP HTTP, webhooks)
 - L0+L1 memory (Rust)
 - Audit log
 - Per-IP rate limit
 - Prometheus metrics
 
-### Sprint 2 — Python Brain v1 (2 hafta)
-- Agent loop refactor (yangi prompt_builder)
+### Sprint 2 — Python Brain v1 (2 weeks)
+- Agent loop refactor (new prompt_builder)
 - Memory manager (L0+L1+L2 unified)
-- Tool registry consolidatsiyasi (all_tools.py + registry.py → bitta)
-- Plugin system (5 ta tip)
+- Tool registry consolidation (all_tools.py + registry.py → one)
+- Plugin system (5 types)
 - Honcho-style user_model
 
-### Sprint 3 — Skills & Curator (2 hafta)
-- agentskills.io standart
+### Sprint 3 — Skills & Curator (2 weeks)
+- agentskills.io standard
 - Skill bundles (YAML)
 - Curator pipeline (grading, consolidate, archive, prune)
-- HuggingFace tap integratsiyasi
-- 50 ta bundled skill (yangi yozish)
+- HuggingFace tap integration
+- 50 bundled skills (newly written)
 
-### Sprint 4 — Tools Suite I (2 hafta)
-- Web/file/terminal/memory/delegation toolsets (40 ta tool)
+### Sprint 4 — Tools Suite I (2 weeks)
+- Web/file/terminal/memory/delegation toolsets (40 tools)
 - Multi-backend terminal (local, docker, ssh, k8s_pod)
 - execute_code with tool access (Hermes parity)
 - file_mutation_verifier
 - LSP write-time diagnostics
 
-### Sprint 5 — Tools Suite II — DevOps (2 hafta)
-- Vault, K8s, Proxmox, SSH, Ansible, Terraform, Docker, ArgoCD toollari
+### Sprint 5 — Tools Suite II — DevOps (2 weeks)
+- Vault, K8s, Proxmox, SSH, Ansible, Terraform, Docker, ArgoCD tools
 - Modal, Daytona, Vercel, Lima, Firecracker terminal backends
 - Compliance modules (uz_152, ru_152, gdpr, cn_pipl)
 
-### Sprint 6 — Channels I (2 hafta)
-- Telegram, Discord, Slack, WhatsApp, Signal — to'liq integration test bilan
+### Sprint 6 — Channels I (2 weeks)
+- Telegram, Discord, Slack, WhatsApp, Signal — with full integration tests
 - Microsoft Teams end-to-end (Graph + webhook + delivery)
 - Email IMAP/SMTP
 - Voice mode (push-to-talk + Discord voice channel)
 
-### Sprint 7 — Channels II (2 hafta)
+### Sprint 7 — Channels II (2 weeks)
 - LINE, Viber, Matrix, Mattermost, Google Chat, IRC
 - iMessage (BlueBubbles), WeChat, WeCom, Feishu, DingTalk, QQBot, Yuanbao, SimpleX
 - Yandex.Messenger, VK, MyChat (CIS exclusives)
 
-### Sprint 8 — Multi-agent & MCP (2 hafta)
+### Sprint 8 — Multi-agent & MCP (2 weeks)
 - Kanban full lifecycle (heartbeat, reclaim, zombie, hallucination gate)
 - delegate_task with isolation
 - mixture_of_agents
@@ -2274,14 +2274,14 @@ docs/
 - MCP server (stdio fix, SSE, OAuth forwarding)
 - MCP client (load external tools)
 
-### Sprint 9 — TUI & Web Dashboard (2 hafta)
+### Sprint 9 — TUI & Web Dashboard (2 weeks)
 - React/Ink TUI (Hermes parity)
 - Web dashboard (Next.js): conversation history, skill manager, tool config, audit viewer
 - ACP integration (VS Code, Zed)
 - Personality system (SOUL.md, /personality)
 - Theme/skin customization
 
-### Sprint 10 — Polish, Performance, Security (2 hafta)
+### Sprint 10 — Polish, Performance, Security (2 weeks)
 - Performance tuning to hit all 11 metric targets
 - External security audit
 - Penetration test
@@ -2290,14 +2290,14 @@ docs/
 - Termux support
 - Cold start optimization
 
-### Sprint 11 — Hub & Marketplace (2 hafta)
+### Sprint 11 — Hub & Marketplace (2 weeks)
 - argo-agent.io/hub (skills marketplace)
 - argo-agent.io/plugins (plugin marketplace)
 - Signed packages
 - 100+ pre-published skills
 - 20+ pre-published plugins
 
-### Sprint 12 — GA Launch (2 hafta)
+### Sprint 12 — GA Launch (2 weeks)
 - Marketing site
 - Documentation 100% complete
 - Tutorial videos (10+ in UZ/RU/EN)
@@ -2312,36 +2312,36 @@ docs/
 
 | # | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|---|
-| R1 | Hermes feature lead grows faster than we can catch up | Yuqori | Yuqori | Niche-first strategy (CA + DevOps), not feature-match-all |
-| R2 | Rust core development slower than estimate | O'rta | Yuqori | Start with proven libs (Axum, Tokio, DashMap), no novel research |
-| R3 | LLM provider API changes break adapters | Yuqori | O'rta | Contract tests + LiteLLM upstream |
-| R4 | Hermes upstream changes their MCP/skill format | O'rta | O'rta | Pin to agentskills.io standard, version compatibility shim |
-| R5 | Single dev burnout | Yuqori | Kritik | Open-source from day 1, attract contributors early |
-| R6 | Sovereign deployment legal complexity (UZ/RU/CN) | O'rta | Yuqori | Compliance modules separated; users opt in |
-| R7 | Tokenizer drift for Central Asian languages | O'rta | O'rta | Bundle SentencePiece models per language pack |
-| R8 | Sandbox bypass discovered | O'rta | Kritik | External audit + bug bounty |
-| R9 | OAuth flow changes for subscription providers | Yuqori | O'rta | Maintained transport layer, fallback to API key |
-| R10 | Performance targets unrealistic in practice | O'rta | O'rta | Continuous benchmark gates on PRs, alert on regression |
+| R1 | Hermes feature lead grows faster than we can catch up | High | High | Niche-first strategy (CA + DevOps), not feature-match-all |
+| R2 | Rust core development slower than estimate | Medium | High | Start with proven libs (Axum, Tokio, DashMap), no novel research |
+| R3 | LLM provider API changes break adapters | High | Medium | Contract tests + LiteLLM upstream |
+| R4 | Hermes upstream changes their MCP/skill format | Medium | Medium | Pin to agentskills.io standard, version compatibility shim |
+| R5 | Single dev burnout | High | Critical | Open-source from day 1, attract contributors early |
+| R6 | Sovereign deployment legal complexity (UZ/RU/CN) | Medium | High | Compliance modules separated; users opt in |
+| R7 | Tokenizer drift for Central Asian languages | Medium | Medium | Bundle SentencePiece models per language pack |
+| R8 | Sandbox bypass discovered | Medium | Critical | External audit + bug bounty |
+| R9 | OAuth flow changes for subscription providers | High | Medium | Maintained transport layer, fallback to API key |
+| R10 | Performance targets unrealistic in practice | Medium | Medium | Continuous benchmark gates on PRs, alert on regression |
 
 ---
 
-## 15. Ochiq savollar
+## 15. Open questions
 
-1. **L3 KG (knowledge graph) — opt-in yoki default?** Hozircha opt-in deb belgilangan, lekin tajriba kerak.
-2. **Rust brain port — qachon?** v3.5+ uchun rejalashtirilgan, lekin Python brain'ni saqlash yetarli bo'lishi mumkin.
-3. **Cloud hosted service?** "ARGO Cloud" SaaS taklif qilishimiz kerakmi? Bu monetization yo'li, lekin "self-hosted first" g'oyasiga zid.
-4. **Telemetry — qachon yoqilishi mumkin?** Hech qachon default ON emas, lekin opt-in (`argo telemetry enable`) bilan minimal anonim metrics yig'ish foydali bo'lishi mumkin.
-5. **Premium tier** — voice cloning, advanced video gen, premium models — bularning hammasi user-konfiguratsiyada qoladi yoki premium tier bo'ladimi?
-6. **Hermes interop** — ARGO Hermes skill'larini import qiladi, lekin Hermes'ga skill exportlash kerakmi (qarama-qarshi yo'nalish)?
-7. **Mobile-native app** — non-goal sifatida belgilangan, lekin O'rta Osiyo bozorida foydalanuvchilar ko'p mobile-first. Qayta ko'rib chiqish kerakmi?
+1. **L3 KG (knowledge graph) — opt-in or default?** Currently marked as opt-in, but experimentation is needed.
+2. **Rust brain port — when?** Planned for v3.5+, but keeping the Python brain may be sufficient.
+3. **Cloud hosted service?** Should we offer an "ARGO Cloud" SaaS? It is a monetization path, but it conflicts with the "self-hosted first" philosophy.
+4. **Telemetry — when, if ever, can it be enabled?** Never default ON, but collecting minimal anonymous metrics on an opt-in basis (`argo telemetry enable`) may be useful.
+5. **Premium tier** — voice cloning, advanced video gen, premium models — will all of these remain in user configuration, or will there be a premium tier?
+6. **Hermes interop** — ARGO imports Hermes skills, but should it also export skills to Hermes (the reverse direction)?
+7. **Mobile-native app** — marked as a non-goal, but many users in the Central Asian market are mobile-first. Should this be reconsidered?
 
 ---
 
-## Ilova A — Hermes ↔ ARGO to'liq feature matritsasi
+## Appendix A — Hermes ↔ ARGO full feature matrix
 
-(Yuqorida 2-bo'limda qisqartirilgan; bu yerda — to'liq, 155+ qator. Hujjatda alohida sahifa.)
+(Abridged in section 2 above; here, the full version with 155+ rows. A separate page in the document.)
 
-| Kategoriya | Funksiya | Hermes v0.14 | ARGO v3.0 |
+| Category | Feature | Hermes v0.14 | ARGO v3.0 |
 |---|---|---|---|
 | **Memory** | 3-layer architecture | ✅ | ✅ |
 | | 4-layer (with KG) | ❌ | ✅ |
@@ -2361,15 +2361,15 @@ docs/
 | | @ context references | ✅ | ✅ |
 | | Project context loading | ✅ | ✅ |
 
-(...va shu kabi yana 130+ qator. To'liq jadval Excel/Markdown sifatida ARGO_TZ_Hermes_Parity.xlsx faylida ko'rsatiladi.)
+(...and 130+ more rows like this. The full table is provided as Excel/Markdown in the ARGO_Hermes_Parity.xlsx file.)
 
 ---
 
-## Ilova B — Tahlil natijalarining qisqacha aks etishi
+## Appendix B — Brief summary of the analysis results
 
-ARGO v2.0 (mavjud kod) tahlil natijalari:
+Results of the ARGO v2.0 (existing code) analysis:
 
-**Buzilgan komponentlar (Sprint 0 da tuzatilishi shart):**
+**Broken components (must be fixed in Sprint 0):**
 1. `config.py:171` — orphan fields outside class body (syntax error)
 2. `core/agent.py:110` — `KanbanManager()` missing `runner` argument
 3. `cache/session.py:46` — `asyncio.create_task` in `__init__`
@@ -2381,25 +2381,25 @@ ARGO v2.0 (mavjud kod) tahlil natijalari:
 9. `SkillLoader.list_skills()` — method doesn't exist (`list_all` does)
 10. `MemoryManager.add_ktask` — doesn't exist (test references it)
 
-**Yarim implementatsiyalar (Sprint 1-9 davomida to'ldiriladi):**
+**Partial implementations (to be completed during Sprints 1-9):**
 - Compression (importance < 0.7 — no-op as default importance is 1.0)
 - Security sandbox (linux_limits stub)
 - Shell BLOCKED (trivial whitespace bypass)
 - Tokenizer (text.len/4 — wrong for Cyrillic/Arabic)
 - LINE channel HMAC (graceful fallback skips verification)
-- skills_400.py (26 of claimed 400+)
+- skills_400.py (26 of the claimed 400+)
 - MCP stdio (Content-Length headers — wrong for spec)
 
-**Ishlayotgan asoslar (asos sifatida saqlanadi):**
-- Rust gateway/IPC/memory.rs — sifat darajasida saqlanadi
-- Agent loop arxitekturasi — yaxshi
-- Channel skeletalari — kengaytiriladi
-- Plugin API — kengaytiriladi (5 ta tip)
-- Doctor — kengaytiriladi
+**Working foundations (kept as the base):**
+- Rust gateway/IPC/memory.rs — kept at quality level
+- Agent loop architecture — good
+- Channel skeletons — to be extended
+- Plugin API — to be extended (5 types)
+- Doctor — to be extended
 
 ---
 
-## Ilova C — Migration plan from v2.0
+## Appendix C — Migration plan from v2.0
 
 For users running ARGO v2.0 alpha:
 
@@ -2435,16 +2435,16 @@ argo doctor
 
 ---
 
-## Hujjat oxiri
+## End of document
 
-**Tasdiqlash:** Bu TZ taqdim etiladi va boshlash uchun rasmiy hujjat sifatida xizmat qiladi. O'zgartirishlar — PR + 2 reviewer approval.
+**Approval:** This TZ is submitted and serves as the official document for getting started. Changes are made via PR + 2 reviewer approvals.
 
-**Keyingi qadam:** Sprint 0'ni boshlash. Birinchi shartnoma yetkazib berishi: barcha v2.0 buglari tuzatilgan + testlar 100% yashil.
+**Next step:** Start Sprint 0. The first contractual deliverable: all v2.0 bugs fixed + tests 100% green.
 
-**Aloqa:** GitHub Issues, Discord #argo-dev kanali.
+**Contact:** GitHub Issues, Discord #argo-dev channel.
 
 ---
 
-*Hujjat versiyasi: 1.0*
-*Yaratilgan: May 2026*
-*Litsenziya: MIT (ARGO loyihasi bilan birga)*
+*Document version: 1.0*
+*Created: May 2026*
+*License: MIT (together with the ARGO project)*

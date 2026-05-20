@@ -35,12 +35,12 @@ def _safe_eval(node: ast.AST) -> float:
     if isinstance(node, ast.Constant):
         if isinstance(node.value, (int, float)):
             return node.value
-        raise ValueError("faqat sonlar ruxsat etiladi")
+        raise ValueError("only numbers are allowed")
     if isinstance(node, ast.BinOp) and type(node.op) in _BIN_OPS:
         return _BIN_OPS[type(node.op)](_safe_eval(node.left), _safe_eval(node.right))
     if isinstance(node, ast.UnaryOp) and type(node.op) in _UNARY_OPS:
         return _UNARY_OPS[type(node.op)](_safe_eval(node.operand))
-    raise ValueError("ruxsat etilmagan ifoda")
+    raise ValueError("expression not allowed")
 
 
 # --- tools ------------------------------------------------------------------
@@ -48,7 +48,7 @@ def _safe_eval(node: ast.AST) -> float:
 
 class CurrentTimeTool(Tool):
     name = "current_time"
-    description = "Joriy UTC sana va vaqtni ISO formatda qaytaradi."
+    description = "Returns the current UTC date and time in ISO format."
     parameters = {"type": "object", "properties": {}}
 
     async def run(self, user_id: str, **kwargs) -> ToolResult:
@@ -57,11 +57,11 @@ class CurrentTimeTool(Tool):
 
 class CalculateTool(Tool):
     name = "calculate"
-    description = "Arifmetik ifodani hisoblaydi (+ - * / // % **)."
+    description = "Evaluates an arithmetic expression (+ - * / // % **)."
     parameters = {
         "type": "object",
         "properties": {
-            "expression": {"type": "string", "description": "Masalan: 2 + 2 * 10"}
+            "expression": {"type": "string", "description": "e.g. 2 + 2 * 10"}
         },
         "required": ["expression"],
     }
@@ -71,13 +71,13 @@ class CalculateTool(Tool):
             tree = ast.parse(expression, mode="eval")
             value = _safe_eval(tree)
         except (ValueError, SyntaxError, ZeroDivisionError, TypeError) as exc:
-            return ToolResult(content=f"Hisoblab bo'lmadi: {exc}", success=False)
+            return ToolResult(content=f"Could not calculate: {exc}", success=False)
         return ToolResult(content=str(value))
 
 
 class ReadFileTool(Tool):
     name = "read_file"
-    description = "Matnli faylni o'qiydi (maksimum 64 KB)."
+    description = "Reads a text file (maximum 64 KB)."
     parameters = {
         "type": "object",
         "properties": {"path": {"type": "string"}},
@@ -88,17 +88,17 @@ class ReadFileTool(Tool):
     async def run(self, user_id: str, path: str = "", **kwargs) -> ToolResult:
         p = Path(path).expanduser()
         if not p.is_file():
-            return ToolResult(content=f"Fayl topilmadi: {path}", success=False)
+            return ToolResult(content=f"File not found: {path}", success=False)
         try:
             data = p.read_text(encoding="utf-8", errors="replace")[: self._MAX]
         except OSError as exc:
-            return ToolResult(content=f"O'qib bo'lmadi: {exc}", success=False)
+            return ToolResult(content=f"Could not read: {exc}", success=False)
         return ToolResult(content=data)
 
 
 class ListDirTool(Tool):
     name = "list_dir"
-    description = "Katalog tarkibini ro'yxatlaydi."
+    description = "Lists the contents of a directory."
     parameters = {
         "type": "object",
         "properties": {"path": {"type": "string"}},
@@ -108,16 +108,16 @@ class ListDirTool(Tool):
     async def run(self, user_id: str, path: str = ".", **kwargs) -> ToolResult:
         p = Path(path).expanduser()
         if not p.is_dir():
-            return ToolResult(content=f"Katalog emas: {path}", success=False)
+            return ToolResult(content=f"Not a directory: {path}", success=False)
         entries = sorted(
             (f"{'[d] ' if e.is_dir() else '    '}{e.name}" for e in p.iterdir())
         )
-        return ToolResult(content="\n".join(entries) or "(bo'sh)")
+        return ToolResult(content="\n".join(entries) or "(empty)")
 
 
 class MemorySearchTool(Tool):
     name = "memory_search"
-    description = "Foydalanuvchining suhbat xotirasidan to'liq-matnli qidiradi."
+    description = "Full-text search across the user's conversation memory."
     parameters = {
         "type": "object",
         "properties": {"query": {"type": "string"}},
@@ -130,7 +130,7 @@ class MemorySearchTool(Tool):
     async def run(self, user_id: str, query: str = "", **kwargs) -> ToolResult:
         hits = await self._memory.search(user_id, query, limit=5)
         if not hits:
-            return ToolResult(content="Xotirada mos natija topilmadi.")
+            return ToolResult(content="No matching results found in memory.")
         lines = [f"[{h['role']}] {h['content']}" for h in hits]
         return ToolResult(content="\n".join(lines))
 

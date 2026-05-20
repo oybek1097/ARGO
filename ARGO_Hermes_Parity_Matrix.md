@@ -1,19 +1,19 @@
-# Ilova A — Hermes v0.14.0 ↔ ARGO v3.0 to'liq feature parity matritsasi
+# Appendix A — Hermes v0.14.0 ↔ ARGO v3.0 full feature parity matrix
 
-**Hujjat versiyasi:** 1.0 · **Sana:** May 2026
-**Manbalar:** Hermes Agent rasmiy hujjatlari (hermes-agent.nousresearch.com), GitHub repository, v0.14.0 release notes, ARGO v2.0 kod tahlili.
+**Document version:** 1.0 · **Date:** May 2026
+**Sources:** Hermes Agent official documentation (hermes-agent.nousresearch.com), GitHub repository, v0.14.0 release notes, ARGO v2.0 code analysis.
 
-**Belgilashlar:**
-- ✅ — bor va to'liq ishlaydi
-- 🟡 — qisman / kichik versiyada / qo'shimcha ishlash kerak
-- ❌ — yo'q
-- 🆕 — ARGO exclusive (Hermes'da yo'q)
+**Legend:**
+- ✅ — present and fully working
+- 🟡 — partial / minimal version / additional work required
+- ❌ — not present
+- 🆕 — ARGO exclusive (not present in Hermes)
 
 ---
 
-## 1. Asosiy arxitektura va platforma
+## 1. Core architecture and platform
 
-| # | Funksiya | Hermes v0.14 | ARGO v3.0 target | Eslatma |
+| # | Feature | Hermes v0.14 | ARGO v3.0 target | Notes |
 |---|---|---|---|---|
 | 1.1 | Self-improving learning loop | ✅ | ✅ | reflection + curator |
 | 1.2 | Persistent cross-session memory | ✅ | ✅ | |
@@ -38,7 +38,7 @@
 
 ## 2. Memory subsystem
 
-| # | Funksiya | Hermes | ARGO | Eslatma |
+| # | Feature | Hermes | ARGO | Notes |
 |---|---|---|---|---|
 | 2.1 | Working memory (in-process) | ✅ | ✅ | L0 |
 | 2.2 | SQLite persistent | ✅ | ✅ | L1 with WAL |
@@ -63,7 +63,7 @@
 
 ## 3. Skills system
 
-| # | Funksiya | Hermes | ARGO | Eslatma |
+| # | Feature | Hermes | ARGO | Notes |
 |---|---|---|---|---|
 | 3.1 | agentskills.io standart | ✅ | ✅ | |
 | 3.2 | Bundled skills count | 118+ (v0.10) + 9 (v0.14) | 150+ target | sprint 3 |
@@ -114,7 +114,7 @@
 | 4.17 | delegate_task | ✅ | ✅ |
 | 4.18 | mixture_of_agents | ✅ | ✅ |
 | 4.19 | dag_workflow | ❌ | ✅ 🆕 |
-| 4.20 | kanban_create + 6 ta | ✅ | ✅ |
+| 4.20 | kanban_create + 6 more | ✅ | ✅ |
 | 4.21 | cronjob | ✅ | ✅ |
 | 4.22 | execute_code (with tool access) | ✅ | ✅ |
 | 4.23 | execute_python | ✅ | ✅ |
@@ -259,7 +259,7 @@
 
 ## 8. Multi-agent & delegation
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 8.1 | Kanban boards (durable) | ✅ | ✅ |
 | 8.2 | Heartbeat + reclaim | ✅ | ✅ |
@@ -283,7 +283,7 @@
 
 ## 9. MCP integration
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 9.1 | MCP server (expose tools) | ✅ | ✅ |
 | 9.2 | MCP client (consume external) | ✅ | ✅ |
@@ -301,7 +301,7 @@
 
 ## 10. Plugin system
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 10.1 | General plugin type | ✅ | ✅ |
 | 10.2 | Memory provider plugin | ✅ | ✅ |
@@ -333,7 +333,7 @@
 
 ## 11. Voice / Multimedia
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 11.1 | Voice mode CLI (push-to-talk) | ✅ | ✅ |
 | 11.2 | Voice mode in messaging | ✅ | ✅ |
@@ -360,7 +360,7 @@
 
 ## 12. CLI / TUI / Web
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 12.1 | Interactive CLI | ✅ | ✅ |
 | 12.2 | React/Ink TUI | ✅ (v0.11+) | ✅ |
@@ -386,7 +386,7 @@
 
 ## 13. IDE / ACP integration
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 13.1 | VS Code integration | ✅ ACP | ✅ |
 | 13.2 | Zed integration | ✅ ACP | ✅ |
@@ -403,7 +403,7 @@
 
 ## 14. API & integrations
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 14.1 | REST /api/chat | ✅ | ✅ |
 | 14.2 | WebSocket | ✅ | ✅ |
@@ -429,7 +429,7 @@
 
 ## 15. Cron / Scheduling
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 15.1 | Cron expression scheduling | ✅ | ✅ |
 | 15.2 | Natural language scheduling | ✅ | ✅ |
@@ -445,7 +445,7 @@
 
 ## 16. Security
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 16.1 | Secret redaction | ✅ default OFF v0.12+ | ✅ |
 | 16.2 | OS sandbox (seccomp-bpf) | 🟡 via containers | ✅ 🆕 native Rust |
@@ -471,13 +471,13 @@
 | 16.22 | External security audit | ✅ | ✅ pre-GA |
 | 16.23 | Bug bounty program | 🟡 | ✅ |
 | 16.24 | **Compliance: GDPR** | 🟡 | ✅ 🆕 module |
-| 16.25 | **Compliance: O'zR 152** | ❌ | ✅ 🆕 |
+| 16.25 | **Compliance: Uzbekistan Law No. 152** | ❌ | ✅ 🆕 |
 | 16.26 | **Compliance: Russia 152-FZ** | ❌ | ✅ 🆕 |
 | 16.27 | **Compliance: China PIPL** | ❌ | ✅ 🆕 |
 
 ## 17. RL / Training
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 17.1 | Trajectory export (ShareGPT) | ✅ | ✅ |
 | 17.2 | Atropos export | ✅ | ✅ |
@@ -488,19 +488,19 @@
 
 ## 18. Observability
 
-| # | Funksiya | Hermes | ARGO |
+| # | Feature | Hermes | ARGO |
 |---|---|---|---|
 | 18.1 | Prometheus metrics | 🟡 | ✅ 🆕 first-class |
 | 18.2 | OpenTelemetry traces | ❌ | ✅ 🆕 |
 | 18.3 | Structured JSON logs | ✅ | ✅ |
-| 18.4 | Grafana dashboards bundled | ❌ | ✅ 🆕 6 ta |
+| 18.4 | Grafana dashboards bundled | ❌ | ✅ 🆕 6 dashboards |
 | 18.5 | Jaeger/Tempo integration | ❌ | ✅ 🆕 |
 | 18.6 | Per-request trace IDs | 🟡 | ✅ |
 | 18.7 | SIEM export (Splunk/ELK) | ❌ | ✅ 🆕 |
 
 ## 19. Internationalization (i18n)
 
-| # | Til | Hermes (UI) | ARGO (UI+agent) |
+| # | Language | Hermes (UI) | ARGO (UI+agent) |
 |---|---|---|---|
 | 19.1 | English | ✅ | ✅ |
 | 19.2 | Chinese (Simplified) | ✅ | ✅ |
@@ -597,9 +597,9 @@
 
 ---
 
-## Yakuniy hisob
+## Final tally
 
-| Kategoriya | Hermes-da bor | ARGO target | ARGO 🆕 exclusive |
+| Category | Present in Hermes | ARGO target | ARGO 🆕 exclusive |
 |---|---|---|---|
 | Architecture | 18 | 20 | 6 |
 | Memory | 18 | 20 | 4 |
@@ -622,8 +622,8 @@
 | i18n | 8 (mostly UI) | 26 | 15 (CA + extra) |
 | OS support | 7 | 10 | 3 |
 | Installation | 7 | 15 | 6 |
-| **JAMI** | **~358** | **~474** | **~110** |
+| **TOTAL** | **~358** | **~474** | **~110** |
 
-**Konklyuziya:** ARGO v3.0 to'liq paritet + ~110 ta exclusive funksiya. Hermes paritetining 100% (358/358) erishish + 30% qo'shimcha (110 yangi) — bu spec'ning umumiy hajmi.
+**Conclusion:** ARGO v3.0 delivers full parity + ~110 exclusive features. Achieving 100% of Hermes parity (358/358) + an additional 30% (110 new features) defines the total scope of this specification.
 
-*Hujjat versiyasi: 1.0 · Sana: May 2026*
+*Document version: 1.0 · Date: May 2026*

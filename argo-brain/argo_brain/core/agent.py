@@ -57,9 +57,9 @@ class AgentResponse:
 
 
 _SYSTEM_TEMPLATE = (
-    "Siz ARGO — ko'p tilli AI agentsiz. Foydalanuvchiga uning tilida "
-    "({language}) qisqa va aniq javob bering. Kerak bo'lsa toollardan "
-    "foydalaning."
+    "You are ARGO, a multilingual AI agent. Reply to the user in their "
+    "detected language ({language}), keeping answers short and precise. "
+    "Use the available tools when needed."
 )
 
 
@@ -171,7 +171,7 @@ class AgentCore:
                 final = resp.content
                 break
         else:
-            final = "Maksimal takrorlashlar soni oshib ketdi."
+            final = "The maximum number of iterations was exceeded."
 
         # 6. Persist to memory
         await self.memory.add(
